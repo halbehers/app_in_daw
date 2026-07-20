@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "categories": [
+        {
+            "id": "music_and_media",
+            "names": ["Spotify", "Music", "iTunes", "VLC", "QuickTime Player", "Tidal", "SoundCloud",
+                      "Rekordbox", "Traktor", "djay", "Serato DJ", "Virtual DJ"],
+            "paths": ["Spotify.app", "Music.app", "iTunes.app", "VLC.app", "QuickTime Player.app", "Tidal.app",
+                      "SoundCloud.app", "rekordbox.app", "Traktor.app", "djay.app", "Serato DJ.app", "Virtual DJ.app"]
+        },
+        {
+            "id": "browsers",
+            "names": ["Safari", "Google Chrome", "Chrome", "Firefox", "Zen Browser", "Zen", "Microsoft Edge",
+                      "Edge", "Brave Browser", "Brave", "Arc", "Opera", "Vivaldi"],
+            "paths": ["Safari.app", "Google Chrome.app", "Firefox.app", "Zen.app", "Microsoft Edge.app",
+                      "Brave Browser.app", "Arc.app", "Opera.app", "Vivaldi.app"]
+        },
+        {
+            "id": "communication_and_meetings",
+            "names": ["zoom.us", "Zoom", "Microsoft Teams", "Teams", "Slack", "Discord", "FaceTime", "Skype",
+                      "Google Meet", "WhatsApp", "Telegram", "Signal", "Webex"],
+            "paths": ["zoom.us.app", "Microsoft Teams.app", "Slack.app", "Discord.app", "FaceTime.app", "Skype.app",
+                      "Google Meet.app", "WhatsApp.app", "Telegram.app", "Signal.app", "Webex.app"]
+        },
+        {
+            "id": "creative_and_daw",
+            "names": ["Ableton Live", "Live", "Logic Pro", "Pro Tools", "FL Studio", "Reaper", "Cubase", "GarageBand",
+                      "Bitwig Studio", "Studio One", "Reason", "Ardour", "Audacity",
+                      "DaVinci Resolve", "Final Cut Pro", "Premiere Pro", "iMovie", "CapCut", "Filmora",
+                      "HandBrake", "Media Composer", "Vegas Pro", "Shotcut",
+                      "Photoshop", "Illustrator", "After Effects", "InDesign", "Lightroom", "Lightroom Classic",
+                      "Audition", "Animate", "Media Encoder", "Substance 3D Painter", "Substance 3D Designer", "Adobe XD",
+                      "Affinity Photo", "Affinity Designer", "Affinity Publisher", "Blender", "Cinema 4D"],
+            "paths": ["Ableton Live", "Logic Pro.app", "Pro Tools.app", "FL Studio.app", "Reaper.app", "Cubase.app", "GarageBand.app",
+                      "Bitwig Studio.app", "Studio One.app", "Reason.app", "Ardour.app", "Audacity.app",
+                      "DaVinci Resolve.app", "Final Cut Pro.app", "Premiere Pro.app", "iMovie.app", "CapCut.app", "Filmora.app",
+                      "HandBrake.app", "Media Composer.app", "Vegas Pro.app", "Shotcut.app",
+                      "Photoshop.app", "Illustrator.app", "After Effects.app", "InDesign.app", "Lightroom.app", "Lightroom Classic.app",
+                      "Audition.app", "Animate.app", "Media Encoder.app", "Substance 3D Painter.app", "Substance 3D Designer.app", "Adobe XD.app",
+                      "Affinity Photo.app", "Affinity Designer.app", "Affinity Publisher.app", "Blender.app", "Cinema 4D.app"]
+        }
+    ]
+}
