@@ -1,6 +1,6 @@
 # App In DAW
 
-**App In DAW** is a macOS audio plugin by Nierika that captures the audio of another running
+**App In DAW** is a macOS & Windows audio plugin by Nierika that captures the audio of another running
 application — a browser tab, Spotify, a video call, a game — and routes it into your DAW as the
 plugin's own output. Pick the source app from an Activity-Monitor-style process list, and its
 audio becomes a track you can record, process, or mix like any other input.
