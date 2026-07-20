@@ -50,10 +50,6 @@ AppLayout::AppLayout(ndsp::ParameterManager& parameterManager, PluginAudioProces
     _stopCaptureButton("stop-capture-button", juce::translate("stop_capture_button").toStdString()),
     _windowsManager(*this)
 {
-    // Best-effort: give the user a real, valid template file to copy from on first real launch.
-    // Not done inside ProcessCategoryMatcher::categorize()/getCategoryTable() - see
-    // ProcessCategory.cpp - so headless unit tests (which construct PluginAudioProcessor directly
-    // but never AppLayout) never write into the real ~/Library folder.
     ProcessCategoryConfig::ensureUserOverridesTemplateExists();
 
     _settings.setIconSize(24.f);
@@ -87,26 +83,25 @@ AppLayout::AppLayout(ndsp::ParameterManager& parameterManager, PluginAudioProces
 
     AppLocalisation::getChangeBroadcaster().addChangeListener(this);
 
-    addAndMakeVisible(_stopCaptureButton);
-
     if (_audioProcessor.isCapturing())
         _processTable.setHighlightedProcessID(_audioProcessor.getLastProcessID());
     _captureStatus.refresh();
 
     getLayout().setGap(16.f);
-    getLayout().setDisplayGrid(true);
+    getLayout().setDisplayGrid(false);
     getLayout().setResizableLineConfiguration({ .displayLine = false });
 
     getLayout().setMargin(24.f, 24.f, 24.f, 24.f);
-    getLayout().init({ 6, 50, 4 }, { 2, 30, 16, 14 });
+    getLayout().init({ 6, 50, 4 }, { 2, 19, 12, 9, 7, 14 });
 
     getLayout().addComponent(_settings, 0, 0, 1, 1);
-    getLayout().addComponent(_searchBar, 0, 1, 1, 1);
-    getLayout().addComponent(_categoryFilter, 0, 2, 1, 1);
-    getLayout().addComponent(_hideBackgroundSwitch, 0, 3, 1, 1);
-    getLayout().addComponent(_processTable, 1, 0, 4, 1);
+    getLayout().addComponent(_searchBar, 0, 1, 2, 1);
+    getLayout().addComponent(_categoryFilter, 0, 3, 2, 1);
+    getLayout().addComponent(_hideBackgroundSwitch, 0, 5, 1, 1);
+    getLayout().addComponent(_processTable, 1, 0, 6, 1);
     getLayout().addComponent(_captureStatus, 2, 0, 2, 1);
-    getLayout().addComponent(_performanceMonitor, 2, 3, 1, 1);
+    getLayout().addComponent(_stopCaptureButton, 2, 2, 2, 1);
+    getLayout().addComponent(_performanceMonitor, 2, 4, 2, 1);
 }
 
 AppLayout::~AppLayout()
@@ -133,10 +128,6 @@ void AppLayout::resized()
 {
     nlayout::AppLayout::resized();
 
-    // ComboBox/TwoWaySwitch look wrong stretched to an arbitrary grid cell (native combo-box
-    // height convention, switch's pill shape) - fixed-size within their cell, same pattern used
-    // throughout the settings sections. SVGButton/TextInput are fine auto-filling their cell
-    // (icon/text stay fixed-size internally regardless of bounds).
     constexpr int categoryFilterWidth = 200;
     const auto categoryFilterHeight = static_cast<int>(nui::Theme::getLargeHeight());
     const auto categoryCellBounds = getLayout().getBounds(_categoryFilter.getComponentID().toStdString());
@@ -150,14 +141,6 @@ void AppLayout::resized()
         .withPosition(hideBackgroundCellBounds.getRight() - (float) hideBackgroundSwitchWidth,
                        hideBackgroundCellBounds.getCentreY() - (float) hideBackgroundSwitchHeight / 2.f).toNearestInt());
 
-    const auto strip = getLayout().getRectangleAtBottom(20.f, 16.f);
-
-    constexpr int gap = 16;
-    constexpr int stopButtonWidth = 90;
-
-    _stopCaptureButton.setBounds(juce::Rectangle<float>(
-        strip.getRight() - (float) stopButtonWidth, strip.getY(), (float) stopButtonWidth, strip.getHeight()).toNearestInt());
-
     _windowsManager.setBounds(getLocalBounds());
 }
 
@@ -169,8 +152,11 @@ void AppLayout::onButtonClick(const std::string& componentID)
     }
     else if (componentID == _stopCaptureButton.getComponentID())
     {
-        _audioProcessor.stopCapturing();
-        _processTable.setHighlightedProcessID(0);
+        if (_audioProcessor.isCapturing()) {
+            _audioProcessor.stopCapturing();
+            _processTable.setHighlightedProcessID(0);
+            _stopCaptureButton.setEnabled(false);
+        }
         _captureStatus.refresh();
     }
 }
@@ -200,6 +186,7 @@ void AppLayout::onSelectionChanged(const std::string& componentID, int selectedI
 void AppLayout::onProcessChosen(const audiocapture::ProcessInfo& process)
 {
     _audioProcessor.selectProcess(process.processID, process.name, process.executablePath);
+    _stopCaptureButton.setEnabled(true);
     _processTable.setHighlightedProcessID(process.processID);
     _captureStatus.refresh();
 }
