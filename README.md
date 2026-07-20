@@ -22,7 +22,7 @@ Available as Standalone, AU, AUv3, and VST3.
 
 ## Requirements
 
-- macOS (process audio capture and plugin validation are both macOS-only)
+- macOS ≥ 14.5 or Windows ≥ 10 (2020)
 - CMake ≥ 3.22, [Ninja](https://ninja-build.org/)
 - A C++20 compiler (Xcode command line tools)
 
@@ -85,4 +85,9 @@ changes to take effect.
 - `Libs` — CPM-fetched dependencies (JUCE, and Nierika's own modules unless a local checkout is
   configured — see `CMakeLists.txt`).
 
-For a deeper architectural overview, see [CLAUDE.md](CLAUDE.md).
+
+---
+
+## Developers
+
+Sebastien Halbeher (`halbehers`) - see [LICENSE](LICENSE).
