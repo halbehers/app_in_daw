@@ -27,5 +27,6 @@ countries: fr be mc ch lu
 "category_browsers" = "Navigateurs"
 "category_communication_and_meetings" = "Communication"
 "category_creative_and_daw" = "Création et DAW"
+"category_cell_auto" = "Autre"
 "hide_background_switch_all" = "Tous"
 "hide_background_switch_main_only" = "Applis"

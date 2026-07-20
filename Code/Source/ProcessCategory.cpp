@@ -10,15 +10,6 @@ namespace
 {
     constexpr const char* kLogSource = "ProcessCategory";
 
-    std::optional<ProcessCategory> configIdToCategory(const juce::String& id)
-    {
-        if (id == "music_and_media")            return ProcessCategory::MusicAndMedia;
-        if (id == "browsers")                   return ProcessCategory::Browsers;
-        if (id == "communication_and_meetings") return ProcessCategory::CommunicationAndMeetings;
-        if (id == "creative_and_daw")           return ProcessCategory::CreativeAndDAW;
-        return std::nullopt;
-    }
-
     // Fixed, deterministic output order, independent of JSON document order.
     const std::vector<ProcessCategory>& orderedCategories()
     {
@@ -78,7 +69,7 @@ namespace
             }
 
             const auto id = entry["id"].toString();
-            const auto category = configIdToCategory(id);
+            const auto category = ProcessCategoryConfig::configIdToCategory(id);
             if (!category.has_value())
             {
                 logProblem("Process category config '" + sourceLabel + "' references unknown category id '" + id + "'; skipping.");
@@ -126,6 +117,28 @@ namespace
 
 namespace ProcessCategoryConfig
 {
+
+juce::String categoryToConfigId(ProcessCategory category)
+{
+    switch (category)
+    {
+        case ProcessCategory::MusicAndMedia:            return "music_and_media";
+        case ProcessCategory::Browsers:                 return "browsers";
+        case ProcessCategory::CommunicationAndMeetings: return "communication_and_meetings";
+        case ProcessCategory::CreativeAndDAW:           return "creative_and_daw";
+        case ProcessCategory::All:                      jassertfalse; return {};
+    }
+    return {};
+}
+
+std::optional<ProcessCategory> configIdToCategory(const juce::String& id)
+{
+    if (id == "music_and_media")            return ProcessCategory::MusicAndMedia;
+    if (id == "browsers")                   return ProcessCategory::Browsers;
+    if (id == "communication_and_meetings") return ProcessCategory::CommunicationAndMeetings;
+    if (id == "creative_and_daw")           return ProcessCategory::CreativeAndDAW;
+    return std::nullopt;
+}
 
 std::vector<CategoryEntry> build(const juce::String& bundledJsonText, const juce::File& userOverridesFile)
 {
@@ -190,6 +203,8 @@ void ensureUserOverridesTemplateExists()
 
 std::optional<ProcessCategory> ProcessCategoryMatcher::categorize(const audiocapture::ProcessInfo& process)
 {
+    if (const auto pinned = AppSettings::getInstance().getCategoryPin(process.name, process.executablePath))
+        return pinned;
     return ProcessCategoryConfig::categorizeUsing(getCategoryTable(), process);
 }
 

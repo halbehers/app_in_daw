@@ -81,3 +81,54 @@ TEST_CASE("AppSettings persists across separate instances over the same file", "
 
     file.deleteFile();
 }
+
+TEST_CASE("AppSettings category pins round-trip and support Auto (clear)", "[AppSettings]")
+{
+    const auto file = makeTempSettingsFile();
+    AppSettings settings(file);
+
+    CHECK(settings.getCategoryPin("Ableton Live", "/Applications/Ableton Live 12 Suite.app/Contents/MacOS/Live") == std::nullopt);
+
+    settings.setCategoryPin("Ableton Live", "/Applications/Ableton Live 12 Suite.app/Contents/MacOS/Live", ProcessCategory::CreativeAndDAW);
+    CHECK(settings.getCategoryPin("Ableton Live", "/Applications/Ableton Live 12 Suite.app/Contents/MacOS/Live") == ProcessCategory::CreativeAndDAW);
+
+    // Re-pinning the same identity replaces rather than duplicates.
+    settings.setCategoryPin("Ableton Live", "/Applications/Ableton Live 12 Suite.app/Contents/MacOS/Live", ProcessCategory::MusicAndMedia);
+    CHECK(settings.getCategoryPin("Ableton Live", "/Applications/Ableton Live 12 Suite.app/Contents/MacOS/Live") == ProcessCategory::MusicAndMedia);
+
+    settings.clearCategoryPin("Ableton Live", "/Applications/Ableton Live 12 Suite.app/Contents/MacOS/Live");
+    CHECK(settings.getCategoryPin("Ableton Live", "/Applications/Ableton Live 12 Suite.app/Contents/MacOS/Live") == std::nullopt);
+
+    file.deleteFile();
+}
+
+TEST_CASE("AppSettings category pin lookup prefers path over name, exactly like tryReacquireLastProcess", "[AppSettings]")
+{
+    const auto file = makeTempSettingsFile();
+    AppSettings settings(file);
+
+    settings.setCategoryPin("Renderer", "/Applications/Zoom.app/Contents/MacOS/Renderer", ProcessCategory::CommunicationAndMeetings);
+
+    // Query has a non-empty path that differs from the stored one - path takes precedence over name, no match.
+    CHECK(settings.getCategoryPin("Renderer", "/Applications/Other.app/Contents/MacOS/Renderer") == std::nullopt);
+
+    // Query has an empty path - falls back to matching by name, which does match here.
+    CHECK(settings.getCategoryPin("Renderer", "") == ProcessCategory::CommunicationAndMeetings);
+
+    // Query has the exact same non-empty path - matches.
+    CHECK(settings.getCategoryPin("Renderer", "/Applications/Zoom.app/Contents/MacOS/Renderer") == ProcessCategory::CommunicationAndMeetings);
+
+    file.deleteFile();
+}
+
+TEST_CASE("AppSettings category pins persist across separate instances over the same file", "[AppSettings]")
+{
+    const auto file = makeTempSettingsFile();
+    {
+        AppSettings first(file);
+        first.setCategoryPin("Spotify", "", ProcessCategory::MusicAndMedia);
+    }
+    AppSettings second(file);
+    CHECK(second.getCategoryPin("Spotify", "") == ProcessCategory::MusicAndMedia);
+    file.deleteFile();
+}

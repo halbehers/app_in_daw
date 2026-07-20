@@ -27,5 +27,6 @@ countries: us gb au ca nz ie
 "category_browsers" = "Browsers"
 "category_communication_and_meetings" = "Communication"
 "category_creative_and_daw" = "Creative & DAW"
+"category_cell_auto" = "Other"
 "hide_background_switch_all" = "All"
 "hide_background_switch_main_only" = "Apps"

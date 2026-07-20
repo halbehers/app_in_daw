@@ -13,7 +13,6 @@ public:
     static constexpr bool ENABLED = true;
     static constexpr int LABEL_WIDTH = 150;
     static constexpr int VALUE_WIDTH = 80;
-    static constexpr int WIDTH = LABEL_WIDTH + VALUE_WIDTH;
 
     explicit PerformanceMonitor(PluginAudioProcessor& audioProcessor);
     ~PerformanceMonitor() override;

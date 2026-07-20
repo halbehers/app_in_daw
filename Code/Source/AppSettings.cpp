@@ -8,6 +8,7 @@ namespace
     const char* LANGUAGE_KEY = "language";
     const char* LAST_CATEGORY_FILTER_KEY = "lastCategoryFilter";
     const char* HIDE_BACKGROUND_PROCESSES_KEY = "hideBackgroundProcesses";
+    const char* CATEGORY_PINS_KEY = "categoryPins";
 
     const char* THEME_MODE_LIGHT = "light";
     const char* THEME_MODE_DARK = "dark";
@@ -35,6 +36,27 @@ namespace
         options.storageFormat = juce::PropertiesFile::storeAsXML;
         options.processLock = &processLock;
         return options;
+    }
+
+    // Every entry: {"name": <string>, "path": <string>, "category": <config-id-string>}. Stored
+    // compactly since it's opaque, app-managed state, not meant for hand-editing (unlike
+    // process_categories.json's user-overrides file).
+    juce::var loadCategoryPinsArray(const juce::PropertiesFile& properties)
+    {
+        juce::var parsed;
+        if (juce::JSON::parse(properties.getValue(CATEGORY_PINS_KEY, "[]"), parsed).failed() || !parsed.isArray())
+            return juce::var(juce::Array<juce::var>());
+        return parsed;
+    }
+
+    // Mirrors PluginAudioProcessor::tryReacquireLastProcess()'s identity precedence exactly:
+    // prefer an exact executablePath match when the query has a non-empty path, else fall back
+    // to an exact name match.
+    bool matchesPinIdentity(const juce::var& entry, const std::string& name, const std::string& executablePath)
+    {
+        if (!executablePath.empty())
+            return entry["path"].toString() == juce::String(executablePath);
+        return entry["name"].toString() == juce::String(name);
     }
 }
 
@@ -108,6 +130,54 @@ bool AppSettings::getHideBackgroundProcesses() const
 void AppSettings::setHideBackgroundProcesses(bool hide)
 {
     _properties.setValue(HIDE_BACKGROUND_PROCESSES_KEY, hide);
+    _properties.save();
+}
+
+std::optional<ProcessCategory> AppSettings::getCategoryPin(const std::string& name, const std::string& executablePath) const
+{
+    const auto pins = loadCategoryPinsArray(_properties);
+    if (const auto* array = pins.getArray())
+        for (const auto& entry : *array)
+            if (matchesPinIdentity(entry, name, executablePath))
+                return ProcessCategoryConfig::configIdToCategory(entry["category"].toString());
+    return std::nullopt;
+}
+
+void AppSettings::setCategoryPin(const std::string& name, const std::string& executablePath, ProcessCategory category)
+{
+    auto pins = loadCategoryPinsArray(_properties);
+    auto* array = pins.getArray(); // never null: loadCategoryPinsArray() always returns an array var
+
+    juce::DynamicObject::Ptr entry = new juce::DynamicObject();
+    entry->setProperty("name", juce::String(name));
+    entry->setProperty("path", juce::String(executablePath));
+    entry->setProperty("category", ProcessCategoryConfig::categoryToConfigId(category));
+
+    bool replaced = false;
+    for (auto& existing : *array)
+        if (matchesPinIdentity(existing, name, executablePath))
+        {
+            existing = juce::var(entry.get());
+            replaced = true;
+            break;
+        }
+    if (!replaced)
+        array->add(juce::var(entry.get()));
+
+    _properties.setValue(CATEGORY_PINS_KEY, juce::JSON::toString(pins, true));
+    _properties.save();
+}
+
+void AppSettings::clearCategoryPin(const std::string& name, const std::string& executablePath)
+{
+    auto pins = loadCategoryPinsArray(_properties);
+    auto* array = pins.getArray();
+
+    for (int i = array->size(); --i >= 0;)
+        if (matchesPinIdentity(array->getReference(i), name, executablePath))
+            array->remove(i);
+
+    _properties.setValue(CATEGORY_PINS_KEY, juce::JSON::toString(pins, true));
     _properties.save();
 }
 

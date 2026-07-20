@@ -45,6 +45,7 @@ private:
     int getNumRows() override;
     void paintRowBackground(juce::Graphics&, int rowNumber, int width, int height, bool rowIsSelected) override;
     void paintCell(juce::Graphics&, int rowNumber, int columnId, int width, int height, bool rowIsSelected) override;
+    juce::Component* refreshComponentForCell(int rowNumber, int columnId, bool isRowSelected, juce::Component* existingComponentToUpdate) override;
     void cellDoubleClicked(int rowNumber, int columnId, const juce::MouseEvent&) override;
     void returnKeyPressed(int lastRowSelected) override;
     void sortOrderChanged(int newSortColumnId, bool isForwards) override;

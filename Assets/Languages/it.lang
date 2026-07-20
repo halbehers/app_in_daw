@@ -27,5 +27,6 @@ countries: it ch sm va
 "category_browsers" = "Browser"
 "category_communication_and_meetings" = "Comunicazione"
 "category_creative_and_daw" = "Creatività e DAW"
+"category_cell_auto" = "Altro"
 "hide_background_switch_all" = "Tutti"
 "hide_background_switch_main_only" = "App"

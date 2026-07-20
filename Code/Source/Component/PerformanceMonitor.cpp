@@ -38,8 +38,6 @@ void PerformanceMonitor::resized()
     if (!ENABLED)
         return;
 
-    setSize(WIDTH, getHeight());
-
     _label.setBounds(getWidth() - LABEL_WIDTH - VALUE_WIDTH, 0, LABEL_WIDTH, getHeight());
     _latencyValue.setBounds(getWidth() - VALUE_WIDTH, 0, VALUE_WIDTH, getHeight());
 }

@@ -46,7 +46,7 @@ AppLayout::AppLayout(ndsp::ParameterManager& parameterManager, PluginAudioProces
     _hideBackgroundSwitch("hide-background-switch", juce::translate("hide_background_switch_all").toStdString(), juce::translate("hide_background_switch_main_only").toStdString()),
     _processTable("process-table"),
     _performanceMonitor(audioProcessor),
-    _captureStatusLabel("capture-status-label", "", juce::translate("capture_status_not_capturing").toStdString()),
+    _captureStatus(audioProcessor),
     _stopCaptureButton("stop-capture-button", juce::translate("stop_capture_button").toStdString()),
     _windowsManager(*this)
 {
@@ -62,23 +62,24 @@ AppLayout::AppLayout(ndsp::ParameterManager& parameterManager, PluginAudioProces
 
     _searchBar.addOnValueChangedListener(this);
     _searchBar.setPlaceholder(juce::translate("search_placeholder").toStdString());
-    _searchBar.setBorderRadius(20.f);
     _searchBar.setHeightType(nui::Theme::HeightType::LARGE);
+    _searchBar.setRounded(true);
 
     populateCategoryFilter();
     _categoryFilter.setSelectedId(categoryToId(AppSettings::getInstance().getLastCategoryFilter()), juce::dontSendNotification);
     _categoryFilter.addOnValueChangedListener(this);
     _categoryFilter.setSelectedInvertedTextColor(true);
     _categoryFilter.setHeightType(nui::Theme::HeightType::LARGE);
-
-    _processTable.setCategoryFilter(idToCategory(_categoryFilter.getSelectedId()));
+    _categoryFilter.setSelectedInvertedTextColor(true);
 
     _hideBackgroundSwitch.setSelectedIndex(AppSettings::getInstance().getHideBackgroundProcesses() ? 1 : 0, juce::dontSendNotification);
     _hideBackgroundSwitch.addOnValueChangedListener(this);
     _hideBackgroundSwitch.setSelectedInvertedTextColor(true);
     _hideBackgroundSwitch.setHeightType(nui::Theme::HeightType::LARGE);
+    _hideBackgroundSwitch.setRounded(true);
+    
+    _processTable.setCategoryFilter(idToCategory(_categoryFilter.getSelectedId()));
     _processTable.setHideBackgroundProcesses(_hideBackgroundSwitch.getSelectedIndex() == 1);
-
     _processTable.addOnProcessChosenListener(this);
 
     _stopCaptureButton.addOnClickListener(this);
@@ -86,26 +87,26 @@ AppLayout::AppLayout(ndsp::ParameterManager& parameterManager, PluginAudioProces
 
     AppLocalisation::getChangeBroadcaster().addChangeListener(this);
 
-    addAndMakeVisible(_performanceMonitor);
-    addAndMakeVisible(_captureStatusLabel);
     addAndMakeVisible(_stopCaptureButton);
 
     if (_audioProcessor.isCapturing())
         _processTable.setHighlightedProcessID(_audioProcessor.getLastProcessID());
-    refreshCaptureStatusLabel();
+    _captureStatus.refresh();
 
     getLayout().setGap(16.f);
-    getLayout().setDisplayGrid(false);
+    getLayout().setDisplayGrid(true);
     getLayout().setResizableLineConfiguration({ .displayLine = false });
 
-    getLayout().setMargin(24.f, 24.f, 24.f, 12.f + 20.f + 16.f);
-    getLayout().init({ 6, 54 }, { 2, 30, 16, 14 });
+    getLayout().setMargin(24.f, 24.f, 24.f, 24.f);
+    getLayout().init({ 6, 50, 4 }, { 2, 30, 16, 14 });
 
     getLayout().addComponent(_settings, 0, 0, 1, 1);
     getLayout().addComponent(_searchBar, 0, 1, 1, 1);
     getLayout().addComponent(_categoryFilter, 0, 2, 1, 1);
     getLayout().addComponent(_hideBackgroundSwitch, 0, 3, 1, 1);
     getLayout().addComponent(_processTable, 1, 0, 4, 1);
+    getLayout().addComponent(_captureStatus, 2, 0, 2, 1);
+    getLayout().addComponent(_performanceMonitor, 2, 3, 1, 1);
 }
 
 AppLayout::~AppLayout()
@@ -151,17 +152,8 @@ void AppLayout::resized()
 
     const auto strip = getLayout().getRectangleAtBottom(20.f, 16.f);
 
-    // Latency monitor is LEFT-aligned here - opposite of youtube_in_daw's right-aligned placement.
-    _performanceMonitor.setBounds(juce::Rectangle<float>(
-        strip.getX(), strip.getY(), (float) component::PerformanceMonitor::WIDTH, strip.getHeight()).toNearestInt());
-
     constexpr int gap = 16;
     constexpr int stopButtonWidth = 90;
-
-    const auto statusX = strip.getX() + (float) component::PerformanceMonitor::WIDTH + (float) gap;
-    const auto statusWidth = juce::jmax(0.f, strip.getRight() - (float) stopButtonWidth - (float) gap - statusX);
-
-    _captureStatusLabel.setBounds(juce::Rectangle<float>(statusX, strip.getY(), statusWidth, strip.getHeight()).toNearestInt());
 
     _stopCaptureButton.setBounds(juce::Rectangle<float>(
         strip.getRight() - (float) stopButtonWidth, strip.getY(), (float) stopButtonWidth, strip.getHeight()).toNearestInt());
@@ -179,7 +171,7 @@ void AppLayout::onButtonClick(const std::string& componentID)
     {
         _audioProcessor.stopCapturing();
         _processTable.setHighlightedProcessID(0);
-        refreshCaptureStatusLabel();
+        _captureStatus.refresh();
     }
 }
 
@@ -209,16 +201,7 @@ void AppLayout::onProcessChosen(const audiocapture::ProcessInfo& process)
 {
     _audioProcessor.selectProcess(process.processID, process.name, process.executablePath);
     _processTable.setHighlightedProcessID(process.processID);
-    refreshCaptureStatusLabel();
-}
-
-void AppLayout::refreshCaptureStatusLabel()
-{
-    if (_audioProcessor.isCapturing())
-        _captureStatusLabel.setText(juce::translate("capture_status_capturing").toStdString()
-            .append(_audioProcessor.getLastProcessName()));
-    else
-        _captureStatusLabel.setText(juce::translate("capture_status_not_capturing").toStdString());
+    _captureStatus.refresh();
 }
 
 void AppLayout::bypassComponents(bool isBypassed)
@@ -236,6 +219,5 @@ void AppLayout::changeListenerCallback(juce::ChangeBroadcaster* source)
     _searchBar.setPlaceholder(juce::translate("search_placeholder").toStdString());
     _hideBackgroundSwitch.setLabels(juce::translate("hide_background_switch_all").toStdString(), juce::translate("hide_background_switch_main_only").toStdString());
     _stopCaptureButton.setButtonText(juce::translate("stop_capture_button").toStdString());
-    refreshCaptureStatusLabel();
-    repaint();
+    _captureStatus.refresh();
 }

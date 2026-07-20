@@ -21,6 +21,8 @@ OutputSettings::OutputSettings(const std::string& identifier, PluginAudioProcess
     _trimSwitch.setSelectedIndex(initialIndex, juce::dontSendNotification);
     _trimSwitch.addOnValueChangedListener(this);
     _trimSwitch.setSelectedInvertedTextColor(true);
+    _trimSwitch.setHeightType(nui::Theme::HeightType::THIN);
+    _trimSwitch.setRounded(true);
 
     AppLocalisation::getChangeBroadcaster().addChangeListener(this);
 
@@ -54,10 +56,9 @@ void OutputSettings::resized()
     _layout.resized();
 
     constexpr int switchWidth = 220;
-    constexpr int switchHeight = 28;
     const auto switchCellBounds = _layout.getBounds(_trimSwitch.getID());
-    _trimSwitch.setBounds(juce::Rectangle<float>((float) switchWidth, (float) switchHeight)
-        .withPosition(getControlX(switchCellBounds, (float) switchWidth), switchCellBounds.getCentreY() - (float) switchHeight / 2.f).toNearestInt());
+    _trimSwitch.setBounds(juce::Rectangle<float>((float) switchWidth, (float) _trimSwitch.getHeight())
+        .withPosition(getControlX(switchCellBounds, (float) switchWidth), switchCellBounds.getCentreY() - (float) _trimSwitch.getHeight() / 2.f).toNearestInt());
 }
 
 float OutputSettings::getControlX(const juce::Rectangle<float>& cell, float controlWidth)

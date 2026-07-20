@@ -28,6 +28,17 @@ public:
     [[nodiscard]] bool getHideBackgroundProcesses() const;
     void setHideBackgroundProcesses(bool hide);
 
+    // Per-process manual category override, keyed by identity (see setCategoryPin). Checked by
+    // ProcessCategoryMatcher::categorize() before the substring-based config table, so a pin
+    // takes effect everywhere a category is used (filter, sort, display).
+    [[nodiscard]] std::optional<ProcessCategory> getCategoryPin(const std::string& name, const std::string& executablePath) const;
+
+    // Identity mirrors PluginAudioProcessor::tryReacquireLastProcess()'s precedence: lookups
+    // prefer an exact executablePath match when non-empty, else fall back to name. Never call
+    // with ProcessCategory::All - it's a UI-only pseudo-category, not a real one.
+    void setCategoryPin(const std::string& name, const std::string& executablePath, ProcessCategory category);
+    void clearCategoryPin(const std::string& name, const std::string& executablePath);
+
     static AppSettings& getInstance();
 
     // Writable per-app support directory (~/Library/Nierika/<AppName> on macOS) this app uses

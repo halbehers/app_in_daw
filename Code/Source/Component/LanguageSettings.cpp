@@ -46,6 +46,7 @@ LanguageSettings::LanguageSettings(const std::string& identifier):
 
     _languagePicker.addOnValueChangedListener(this);
     _languagePicker.setSelectedInvertedTextColor(true);
+    _languagePicker.setHeightType(nui::Theme::HeightType::THIN);
 
     AppLocalisation::getChangeBroadcaster().addChangeListener(this);
 
@@ -79,10 +80,9 @@ void LanguageSettings::resized()
     _layout.resized();
 
     constexpr int pickerWidth = 220;
-    constexpr int pickerHeight = 28;
     const auto pickerCellBounds = _layout.getBounds(LANGUAGE_PICKER_ID);
-    _languagePicker.setBounds(juce::Rectangle<float>((float) pickerWidth, (float) pickerHeight)
-        .withPosition(getControlX(pickerCellBounds, (float) pickerWidth), pickerCellBounds.getCentreY() - (float) pickerHeight / 2.f).toNearestInt());
+    _languagePicker.setBounds(juce::Rectangle<float>((float) pickerWidth, (float) _languagePicker.getHeight())
+        .withPosition(getControlX(pickerCellBounds, (float) pickerWidth), pickerCellBounds.getCentreY() - (float) _languagePicker.getHeight() / 2.f).toNearestInt());
 }
 
 float LanguageSettings::getControlX(const juce::Rectangle<float>& cell, float controlWidth)

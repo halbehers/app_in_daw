@@ -27,5 +27,6 @@ countries: es mx ar cl co pe
 "category_browsers" = "Navegadores"
 "category_communication_and_meetings" = "Comunicación"
 "category_creative_and_daw" = "Creación y DAW"
+"category_cell_auto" = "Otro"
 "hide_background_switch_all" = "Todos"
 "hide_background_switch_main_only" = "Apps"

@@ -1,10 +1,95 @@
 #include "Component/ProcessTable.h"
 #include "AppLocalisation.h"
+#include "AppSettings.h"
 
 #include <algorithm>
+#include <functional>
 
 namespace component
 {
+
+namespace
+{
+    constexpr int kAutoCategoryItemId = 5;
+
+    struct CategoryCellOption { int id; ProcessCategory category; };
+
+    const std::vector<CategoryCellOption>& getCategoryCellOptions()
+    {
+        static const std::vector<CategoryCellOption> options = {
+            { 1, ProcessCategory::MusicAndMedia },
+            { 2, ProcessCategory::Browsers },
+            { 3, ProcessCategory::CommunicationAndMeetings },
+            { 4, ProcessCategory::CreativeAndDAW },
+        };
+        return options;
+    }
+
+    int categoryToCellItemId(ProcessCategory category)
+    {
+        for (const auto& option : getCategoryCellOptions())
+            if (option.category == category)
+                return option.id;
+        return kAutoCategoryItemId;
+    }
+
+    std::optional<ProcessCategory> cellItemIdToCategory(int id)
+    {
+        for (const auto& option : getCategoryCellOptions())
+            if (option.id == id)
+                return option.category;
+        return std::nullopt; // kAutoCategoryItemId, or anything unrecognized
+    }
+
+    class CategoryCell final : public juce::Component, private nelement::ComboBox::OnValueChangedListener
+    {
+    public:
+        using OnCategoryChosen = std::function<void(const audiocapture::ProcessInfo&, std::optional<ProcessCategory>)>;
+
+        explicit CategoryCell(OnCategoryChosen onCategoryChosen)
+            : _onCategoryChosen(std::move(onCategoryChosen))
+        {
+            addAndMakeVisible(_comboBox);
+
+            for (const auto& option : getCategoryCellOptions())
+                _comboBox.addItem(ProcessCategoryMatcher::getDisplayName(option.category), option.id);
+            _comboBox.addItem(juce::translate("category_cell_auto"), kAutoCategoryItemId);
+
+            _comboBox.addOnValueChangedListener(this);
+
+            _comboBox.setBackgroundColour(juce::Colours::transparentWhite);
+            _comboBox.setBorderColour(juce::Colours::transparentWhite);
+            _comboBox.setSelectedInvertedTextColor(true);
+            _comboBox.setTextHeight(nui::Theme::PARAGRAPH);
+        }
+
+        ~CategoryCell() override { _comboBox.removeListener(this); }
+
+        void resized() override { _comboBox.setBounds(getLocalBounds()); }
+
+        void setProcess(const audiocapture::ProcessInfo& process)
+        {
+            _process = process;
+
+            const auto pinned = AppSettings::getInstance().getCategoryPin(process.name, process.executablePath);
+            const auto resolved = pinned ? pinned : ProcessCategoryMatcher::categorize(process);
+
+            _comboBox.setSelectedId(resolved ? categoryToCellItemId(*resolved) : kAutoCategoryItemId, juce::dontSendNotification);
+        }
+
+    private:
+        void onSelectionChanged(const std::string& /*componentID*/, int selectedId) override
+        {
+            _onCategoryChosen(_process, cellItemIdToCategory(selectedId));
+        }
+
+        nelement::ComboBox _comboBox { "process-table-category-cell" };
+        audiocapture::ProcessInfo _process;
+        OnCategoryChosen _onCategoryChosen;
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CategoryCell)
+    };
+}
 
 ProcessTable::ProcessTable(const std::string& identifier)
     : Component(identifier)
@@ -112,7 +197,12 @@ void ProcessTable::paintRowBackground(juce::Graphics& g, int rowNumber, int widt
 {
     if (rowIsSelected)
     {
-        g.setColour(nui::Theme::newColor(nui::Theme::ThemeColor::ACCENT).asJuce());
+        g.setColour(nui::Theme::newColor(nui::Theme::ThemeColor::ACCENT).asJuce().withAlpha(.1f));
+        g.fillRect(0, 0, width, height);
+        return;
+    } else if (_filteredProcesses[(size_t) rowNumber].processID == _highlightedProcessID)
+    {
+        g.setColour(nui::Theme::newColor(nui::Theme::ThemeColor::ACCENT).asJuce().withAlpha(.2f));
         g.fillRect(0, 0, width, height);
         return;
     }
@@ -135,12 +225,8 @@ void ProcessTable::paintCell(juce::Graphics& g, int rowNumber, int columnId, int
 
     g.setFont(nui::Theme::newFont(nui::Theme::REGULAR, nui::Theme::PARAGRAPH));
 
-    const auto primaryTextColour = rowIsSelected
-        ? nui::Theme::newColor(nui::Theme::ThemeColor::INVERTED_TEXT).asJuce()
-        : nui::Theme::newColor(nui::Theme::ThemeColor::TEXT).asJuce();
-    const auto secondaryTextColour = rowIsSelected
-        ? nui::Theme::newColor(nui::Theme::ThemeColor::INVERTED_TEXT).asJuce()
-        : nui::Theme::newColor(nui::Theme::ThemeColor::DISABLED).asJuce();
+    const auto primaryTextColour = nui::Theme::newColor(nui::Theme::ThemeColor::TEXT).asJuce();
+    const auto secondaryTextColour = nui::Theme::newColor(nui::Theme::ThemeColor::DISABLED).asJuce();
 
     switch (columnId)
     {
@@ -159,15 +245,6 @@ void ProcessTable::paintCell(juce::Graphics& g, int rowNumber, int columnId, int
             g.drawText(process.name, textX, 0, width - textX - textPadding, height, juce::Justification::centredLeft, true);
             break;
         }
-        case CategoryColumn:
-        {
-            const auto category = ProcessCategoryMatcher::categorize(process);
-            const auto text = category ? ProcessCategoryMatcher::getDisplayName(*category) : juce::String();
-
-            g.setColour(secondaryTextColour);
-            g.drawText(text, textPadding, 0, width - textPadding * 2, height, juce::Justification::centredLeft, true);
-            break;
-        }
         case PidColumn:
         {
             g.setColour(secondaryTextColour);
@@ -177,6 +254,39 @@ void ProcessTable::paintCell(juce::Graphics& g, int rowNumber, int columnId, int
         default:
             break;
     }
+}
+
+juce::Component* ProcessTable::refreshComponentForCell(int rowNumber, int columnId, bool /*isRowSelected*/, juce::Component* existingComponentToUpdate)
+{
+    if (columnId != CategoryColumn)
+    {
+        delete existingComponentToUpdate; // Name/PID stay static text via paintCell().
+        return nullptr;
+    }
+
+    auto* cell = dynamic_cast<CategoryCell*>(existingComponentToUpdate);
+    if (cell == nullptr)
+    {
+        delete existingComponentToUpdate;
+        cell = new CategoryCell([this](const audiocapture::ProcessInfo& process, std::optional<ProcessCategory> category)
+        {
+            if (category)
+                AppSettings::getInstance().setCategoryPin(process.name, process.executablePath, *category);
+            else
+                AppSettings::getInstance().clearCategoryPin(process.name, process.executablePath);
+
+            juce::MessageManager::callAsync([safePointer = juce::Component::SafePointer<ProcessTable>(this)]()
+            {
+                if (safePointer != nullptr)
+                    safePointer->recomputeFilteredRows();
+            });
+        });
+    }
+
+    if (rowNumber >= 0 && rowNumber < (int) _filteredProcesses.size())
+        cell->setProcess(_filteredProcesses[(size_t) rowNumber]);
+
+    return cell;
 }
 
 void ProcessTable::cellDoubleClicked(int rowNumber, int /*columnId*/, const juce::MouseEvent&)

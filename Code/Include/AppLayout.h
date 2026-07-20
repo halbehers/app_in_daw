@@ -6,6 +6,7 @@
 #include "PluginProcessor.h"
 #include "ProcessCategory.h"
 #include "Component/PerformanceMonitor.h"
+#include "Component/CaptureStatus.h"
 #include "Component/SettingsWindow.h"
 #include "Component/ProcessTable.h"
 
@@ -32,7 +33,6 @@ public:
 
 private:
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
-    void refreshCaptureStatusLabel();
     void populateCategoryFilter();
 
     PluginAudioProcessor& _audioProcessor;
@@ -44,7 +44,7 @@ private:
     component::ProcessTable _processTable;
 
     component::PerformanceMonitor _performanceMonitor;
-    nelement::Text _captureStatusLabel;
+    component::CaptureStatus _captureStatus;
     nelement::TextButton _stopCaptureButton;
 
     nlayout::WindowsManager _windowsManager;

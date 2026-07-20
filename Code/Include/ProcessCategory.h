@@ -35,6 +35,13 @@ namespace ProcessCategoryConfig
         std::vector<juce::String> pathSubstrings;
     };
 
+    // Canonical mapping between a category and the JSON config's string id. Shared by build()'s
+    // parsing and by AppSettings' category-pin persistence so there's exactly one id table.
+    // categoryToConfigId must never be called with ProcessCategory::All - a UI-only pseudo-category
+    // with no config id, never produced by build()/categorizeUsing().
+    juce::String categoryToConfigId(ProcessCategory category);
+    std::optional<ProcessCategory> configIdToCategory(const juce::String& id);
+
     // Parses bundledJsonText (always applied), then additively merges userOverridesFile on top
     // if it exists (bundled + user substrings concatenated per category, never replaced).
     // Malformed JSON, an unreadable file, an unknown category id, or a missing "categories"

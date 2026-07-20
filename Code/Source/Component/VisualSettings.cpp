@@ -22,6 +22,8 @@ VisualSettings::VisualSettings(const std::string& identifier):
     _themeSwitch.addOnValueChangedListener(this);
     _themeSwitch.setSelectedIndex(AppSettings::getInstance().getThemeMode() == nui::Theme::Mode::LIGHT ? 1 : 0, juce::dontSendNotification);
     _themeSwitch.setSelectedInvertedTextColor(true);
+    _themeSwitch.setHeightType(nui::Theme::HeightType::THIN);
+    _themeSwitch.setRounded(true);
 
     AppLocalisation::getChangeBroadcaster().addChangeListener(this);
 
@@ -66,11 +68,10 @@ void VisualSettings::resized()
         .withPosition(getControlX(latencyToggleCell, (float) toggleWidth), latencyToggleCell.getCentreY() - (float) toggleHeight / 2.f).toNearestInt());
 
     constexpr int switchWidth = 150;
-    constexpr int switchHeight = 28;
 
     const auto themeToggleCell = _layout.getBounds(_themeSwitch.getID());
-    _themeSwitch.setBounds(juce::Rectangle<float>((float) switchWidth, (float) switchHeight)
-        .withPosition(getControlX(themeToggleCell, (float) switchWidth), themeToggleCell.getCentreY() - (float) switchHeight / 2.f).toNearestInt());
+    _themeSwitch.setBounds(juce::Rectangle<float>((float) switchWidth, (float) _themeSwitch.getHeight())
+        .withPosition(getControlX(themeToggleCell, (float) switchWidth), themeToggleCell.getCentreY() - (float) _themeSwitch.getHeight() / 2.f).toNearestInt());
 }
 
 float VisualSettings::getControlX(const juce::Rectangle<float>& cell, float controlWidth)
