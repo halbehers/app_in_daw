@@ -84,4 +84,7 @@ Libs/audio_capture_dsp/
 # Local developer secrets (see CMake/local.cmake.example)
 CMake/local.cmake
 
+# Written by CMake/GitHubEnv.cmake for CI steps to read - not meant to be committed
+.env
+
 CLAUDE.md

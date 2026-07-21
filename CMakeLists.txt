@@ -163,3 +163,5 @@ enable_testing()
 add_subdirectory(Tests)
 
 include(${CMAKE_DIR}/pluginval.cmake)
+include(${CMAKE_DIR}/GitHubEnv.cmake)
+include(${CMAKE_DIR}/packaging.cmake)

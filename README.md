@@ -33,19 +33,33 @@ and Nierika's `nierika_dsp`/`audio_capture_dsp` modules — are fetched automati
 [CPM](https://github.com/cpm-cmake/CPM.cmake) on first configure.
 
 ```sh
-cmake --preset default          # configure (Debug, Ninja)
+cmake --workflow --preset default  # configure (first run/whenever CMakeLists.txt changes) + build
+```
+
+`--workflow` always does the right thing whether `build/` already exists or not (a fresh clone, or
+after deleting it) - if you'd rather configure and build as separate steps (e.g. to build
+repeatedly without reconfiguring), that still works too, as long as `build/` already exists:
+
+```sh
+cmake --preset default          # configure (Debug, Ninja) - only needed once, or after CMakeLists.txt changes
 cmake --build --preset default  # build
 ```
 
 Built plugin bundles land in `build/AppInDAW_artefacts/Debug/{Standalone,AU,VST3}`. For a Release
-build:
+build (also produces an installer - see below):
 
 ```sh
-cmake --preset release
-cmake --build --preset release
+cmake --workflow --preset release
 ```
 
 Xcode and Visual Studio project generation is available via the `Xcode`/`vs` presets.
+
+### Installers
+
+A Release build also packages an installer automatically: `release-build/Packaging/App In DAW-<version>-macOS.pkg`
+(AU + VST3, ad-hoc signed unless real Developer ID credentials are configured in the environment)
+on macOS, or `release-build\Packaging\App In DAW-<version>-Windows.exe` (VST3, requires
+[Inno Setup](https://jrsoftware.org/isdl.php)'s `iscc` on `PATH`) on Windows.
 
 ## Testing
 

@@ -1,8 +1,8 @@
 {
-  "version": 5,
+  "version": 6,
   "cmakeMinimumRequired": {
     "major": 3,
-    "minor": 22,
+    "minor": 25,
     "patch": 0
   },
   "configurePresets": [
@@ -50,6 +50,22 @@
     {
       "name": "Xcode",
       "configurePreset": "Xcode"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "default",
+      "steps": [
+        { "type": "configure", "name": "default" },
+        { "type": "build", "name": "default" }
+      ]
+    },
+    {
+      "name": "release",
+      "steps": [
+        { "type": "configure", "name": "release" },
+        { "type": "build", "name": "release" }
+      ]
     }
   ]
 }
