@@ -47,7 +47,7 @@ AppLayout::AppLayout(ndsp::ParameterManager& parameterManager, PluginAudioProces
     _processTable("process-table"),
     _performanceMonitor(audioProcessor),
     _captureStatus(audioProcessor),
-    _captureButton("capture", nui::Icons::getStop()),
+    _captureButton("capture", nui::Icons::getStopInCircle()),
     _windowsManager(*this)
 {
     ProcessCategoryConfig::ensureUserOverridesTemplateExists();
@@ -81,7 +81,7 @@ AppLayout::AppLayout(ndsp::ParameterManager& parameterManager, PluginAudioProces
 
     _captureButton.addOnClickListener(this);
     _captureButton.setIconSize(48.f);
-    _captureButton.setColour(juce::TextButton::ColourIds::buttonColourId, nui::Theme::newColor(nui::Theme::ThemeColor::SECONDARY_BACKGROUND).asJuce());
+    _captureButton.setClickableSurface(nui::helpers::ClickableSurface::ELEMENT_BOUNDARIES);
 
     AppLocalisation::getChangeBroadcaster().addChangeListener(this);
 
@@ -91,9 +91,15 @@ AppLayout::AppLayout(ndsp::ParameterManager& parameterManager, PluginAudioProces
     }
     else
     {
-        _captureButton.setIconBinary(nui::Icons::getCapture());
+        _captureButton.setIconBinary(nui::Icons::getCaptureInCircle());
     }
     _captureButton.setEnabled(_audioProcessor.isCapturing() || _processTable.hasSelectedProcess());
+
+    const auto selectedProcess = _processTable.getSelectedProcess();
+    if (selectedProcess.has_value())
+    {
+        _captureStatus.setSelectedProcess(selectedProcess->name);
+    }
     _captureStatus.refresh();
 
     getLayout().setGap(16.f);
@@ -101,7 +107,11 @@ AppLayout::AppLayout(ndsp::ParameterManager& parameterManager, PluginAudioProces
     getLayout().setResizableLineConfiguration({ .displayLine = false });
 
     getLayout().setMargin(24.f, 24.f, 24.f, 24.f);
-    getLayout().init({ 6, 48, 2, 4 }, { 2, 19, 12, 9, 7, 14 });
+    getLayout().init({ 6, 48, 2, 4 }, { 2, 27, 4, 1, 15, 14 });
+
+    getLayout().setFixedRowHeight(0, 60.f);
+    getLayout().setFixedRowHeight(2, 20.f);
+    getLayout().setFixedRowHeight(3, 40.f);
 
     getLayout().addComponent(_settings, 0, 0, 1, 1);
     getLayout().addComponent(_searchBar, 0, 1, 2, 1);
@@ -165,7 +175,7 @@ void AppLayout::onButtonClick(const std::string& componentID)
         if (_audioProcessor.isCapturing()) {
             _audioProcessor.stopCapturing();
             _processTable.setHighlightedProcessID(0);
-            _captureButton.setIconBinary(nui::Icons::getCapture());
+            _captureButton.setIconBinary(nui::Icons::getCaptureInCircle());
         }
         else
         {
@@ -173,7 +183,8 @@ void AppLayout::onButtonClick(const std::string& componentID)
             if (process.has_value())
             {
                 _audioProcessor.selectProcess(process->processID, process->name, process->executablePath);
-                _captureButton.setIconBinary(nui::Icons::getStop());
+                _processTable.setHighlightedProcessID(process->processID);
+                _captureButton.setIconBinary(nui::Icons::getStopInCircle());
             } else
             {
                 _captureButton.setEnabled(false);
@@ -208,7 +219,7 @@ void AppLayout::onSelectionChanged(const std::string& componentID, int selectedI
 void AppLayout::onProcessCapture(const audiocapture::ProcessInfo& process)
 {
     _audioProcessor.selectProcess(process.processID, process.name, process.executablePath);
-    _captureButton.setIconBinary(nui::Icons::getStop());
+    _captureButton.setIconBinary(nui::Icons::getStopInCircle());
     _captureButton.setEnabled(true);
     _processTable.setHighlightedProcessID(process.processID);
     _captureStatus.refresh();
@@ -218,6 +229,7 @@ void AppLayout::onProcessChosen(const audiocapture::ProcessInfo& process)
 {
     _selectedProcessID = process.processID;
     _captureButton.setEnabled(true);
+    _captureStatus.setSelectedProcess(process.name);
 }
 
 void AppLayout::bypassComponents(bool isBypassed)

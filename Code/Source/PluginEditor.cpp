@@ -9,7 +9,7 @@ PluginAudioProcessorEditor::PluginAudioProcessorEditor(PluginAudioProcessor& p):
     addAndMakeVisible(_layout, 10);
 
     setResizable(true, true);
-    setResizeLimits(720, 480, 1920, 1200);
+    setResizeLimits(960, 480, 1920, 1200);
     setSize(960, 640);
 }
 

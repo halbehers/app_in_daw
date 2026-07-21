@@ -17,10 +17,14 @@ public:
 
     void refresh();
 
+    void setSelectedProcess(const std::string& processName);
+    void resetSelectedProcess();
+
 private:
     PluginAudioProcessor& _audioProcessor;
+    std::optional<std::string> _selectedProcessName = std::nullopt;
 
-    nelement::Text _label { "capture-status-label", "", juce::translate("capture_status_not_capturing").toStdString() };
+    nelement::Text _label { "capture-status-label", "", juce::translate("capture_status_empty_state").toStdString() };
     nelement::Text _process { "capture-status-process", "", "" };
 
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;

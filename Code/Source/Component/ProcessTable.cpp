@@ -89,6 +89,25 @@ namespace
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CategoryCell)
     };
+
+    // JUCE's default LookAndFeel (LookAndFeel_V3::drawTableHeaderBackground, which V4 doesn't
+    // override) draws a vertical divider line after every column, using the same
+    // outlineColourId as the header's bottom border. This is the same drawing, minus that
+    // per-column divider loop, so the header shows only the bottom border.
+    class TableHeaderLookAndFeel final : public juce::LookAndFeel_V4
+    {
+    public:
+        void drawTableHeaderBackground(juce::Graphics& g, juce::TableHeaderComponent& header) override
+        {
+            auto area = header.getLocalBounds();
+
+            g.setColour(header.findColour(juce::TableHeaderComponent::outlineColourId));
+            g.fillRect(area.removeFromBottom(1));
+
+            g.setColour(header.findColour(juce::TableHeaderComponent::backgroundColourId));
+            g.fillRect(area);
+        }
+    };
 }
 
 ProcessTable::ProcessTable(const std::string& identifier)
@@ -97,15 +116,19 @@ ProcessTable::ProcessTable(const std::string& identifier)
     addAndMakeVisible(_table);
     _table.setModel(this);
     _table.setMultipleSelectionEnabled(false);
-    _table.setRowHeight(28);
-    _table.setHeaderHeight(28);
+    _table.setRowHeight(rowHeight);
+    _table.setHeaderHeight(rowHeight);
     _table.setOutlineThickness(0);
 
     auto& header = _table.getHeader();
+    header.addColumn("", StatusColumn, rowHeight, rowHeight, rowHeight);
     header.addColumn(juce::translate("process_table_name_column"), NameColumn, 260, 120, -1);
     header.addColumn(juce::translate("process_table_category_column"), CategoryColumn, 160, 100, -1);
     header.addColumn(juce::translate("process_table_pid_column"), PidColumn, 80, 60, 120);
     header.setSortColumnId(NameColumn, true);
+
+    _headerLookAndFeel = std::make_unique<TableHeaderLookAndFeel>();
+    header.setLookAndFeel(_headerLookAndFeel.get());
 
     setTooltip(juce::translate("process_table_tooltip").toStdString());
 
@@ -119,6 +142,10 @@ ProcessTable::ProcessTable(const std::string& identifier)
 
 ProcessTable::~ProcessTable()
 {
+    // Detach before _headerLookAndFeel is destroyed - the header must never hold a dangling
+    // LookAndFeel pointer, even briefly during member teardown.
+    _table.getHeader().setLookAndFeel(nullptr);
+
     nui::Theme::getChangeBroadcaster().removeChangeListener(this);
     AppLocalisation::getChangeBroadcaster().removeChangeListener(this);
 }
@@ -126,6 +153,26 @@ ProcessTable::~ProcessTable()
 void ProcessTable::paint(juce::Graphics& g)
 {
     Component::paint(g);
+}
+
+void ProcessTable::paintOverChildren(juce::Graphics& g)
+{
+    // juce::TableListBox/ListBox always paint flat rectangular fills with no rounding support of
+    // their own, and JUCE clips paint() to each component's own bounds before painting children
+    // (the clip doesn't carry over), so reducing the clip region in paint() can't round _table's
+    // corners. Instead, mask the 4 sharp corners after _table has painted: building a path from
+    // the full rect XOR'd (even-odd winding) with the rounded rect isolates just the corner
+    // slivers, which get painted over in the surrounding background colour.
+    const auto bounds = getLocalBounds().toFloat();
+    const auto radius = nui::Theme::getBorderRadius();
+
+    juce::Path cornerMask;
+    cornerMask.addRectangle(bounds);
+    cornerMask.addRoundedRectangle(bounds, radius);
+    cornerMask.setUsingNonZeroWinding(false);
+
+    g.setColour(nui::Theme::newColor(nui::Theme::ThemeColor::BACKGROUND).asJuce());
+    g.fillPath(cornerMask);
 }
 
 void ProcessTable::resized()
@@ -249,6 +296,7 @@ void ProcessTable::paintCell(juce::Graphics& g, int rowNumber, int columnId, int
 
     constexpr int textPadding = 8;
     constexpr float dotSize = 6.f;
+    constexpr float captureIconSize = 18.f;
 
     g.setFont(nui::Theme::newFont(nui::Theme::REGULAR, nui::Theme::PARAGRAPH));
 
@@ -257,17 +305,21 @@ void ProcessTable::paintCell(juce::Graphics& g, int rowNumber, int columnId, int
 
     switch (columnId)
     {
-        case NameColumn:
+        case StatusColumn:
         {
-            int textX = textPadding;
-
             if (process.processID == _highlightedProcessID)
             {
-                g.setColour(nui::Theme::newColor(nui::Theme::ThemeColor::ACCENT).asJuce());
-                g.fillEllipse((float) textX, (float) height / 2.f - dotSize / 2.f, dotSize, dotSize);
-                textX += (int) dotSize + textPadding;
+                nui::helpers::drawFromSVG(g, nui::Icons::getCapture(), nui::Theme::newColor(nui::Theme::ThemeColor::ACCENT).asHexString(), (float) height / 2.f - captureIconSize / 2.f, (float) height / 2.f - captureIconSize / 2.f, captureIconSize, captureIconSize, juce::AffineTransform());
+            } else if (process.processID == _selectedProcessID)
+            {
+                g.setColour(nui::Theme::newColor(nui::Theme::ThemeColor::ACCENT).asJuce().withAlpha(.8f));
+                g.fillEllipse((float) height / 2.f - dotSize / 2.f, (float) height / 2.f - dotSize / 2.f, dotSize, dotSize);
             }
-
+            break;
+        }
+        case NameColumn:
+        {
+            const int textX = textPadding;
             g.setColour(primaryTextColour);
             g.drawText(process.name, textX, 0, width - textX - textPadding, height, juce::Justification::centredLeft, true);
             break;
@@ -394,13 +446,14 @@ void ProcessTable::applyThemeColours()
     const auto text = nui::Theme::newColor(nui::Theme::ThemeColor::TEXT).asJuce();
     const auto border = nui::Theme::newColor(nui::Theme::ThemeColor::BORDER).asJuce();
     const auto secondaryBackground = nui::Theme::newColor(nui::Theme::ThemeColor::SECONDARY_BACKGROUND).asJuce();
+    const auto primary = nui::Theme::newColor(nui::Theme::ThemeColor::PRIMARY).asJuce();
     const auto accent = nui::Theme::newColor(nui::Theme::ThemeColor::ACCENT).asJuce();
 
     _table.setColour(juce::ListBox::backgroundColourId, background);
     _table.setColour(juce::ListBox::outlineColourId, border);
     _table.setColour(juce::ListBox::textColourId, text);
 
-    _table.getHeader().setColour(juce::TableHeaderComponent::backgroundColourId, secondaryBackground);
+    _table.getHeader().setColour(juce::TableHeaderComponent::backgroundColourId, primary);
     _table.getHeader().setColour(juce::TableHeaderComponent::textColourId, text);
     _table.getHeader().setColour(juce::TableHeaderComponent::outlineColourId, border);
     _table.getHeader().setColour(juce::TableHeaderComponent::highlightColourId, accent.withAlpha(0.3f));

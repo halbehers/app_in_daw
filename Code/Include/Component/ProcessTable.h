@@ -3,6 +3,7 @@
 #include <nierika_dsp/nierika_dsp.h>
 #include <audio_capture_dsp/audio_capture_dsp.h>
 
+#include <memory>
 #include <vector>
 
 #include "ProcessFilter.h"
@@ -28,6 +29,7 @@ public:
     ~ProcessTable() override;
 
     void paint(juce::Graphics&) override;
+    void paintOverChildren(juce::Graphics&) override;
     void resized() override;
     void visibilityChanged() override;
 
@@ -46,13 +48,15 @@ public:
     void setSelectedProcessID(int processID);
     int getSelectedProcessID() { return _selectedProcessID; }
     bool hasSelectedProcess() { return _selectedProcessID != 0; }
+    std::optional<audiocapture::ProcessInfo> getSelectedProcess() { return hasSelectedProcess() ? getProcess(_selectedProcessID) : std::nullopt; }
 
     std::optional<audiocapture::ProcessInfo> getProcess(int processID);
 
 private:
-    enum ColumnId { NameColumn = 1, CategoryColumn, PidColumn };
+    enum ColumnId { NameColumn = 1, CategoryColumn, PidColumn, StatusColumn };
 
     static constexpr int refreshIntervalMs = 5000;
+    static constexpr int rowHeight = 32;
 
     int getNumRows() override;
     void paintRowBackground(juce::Graphics&, int rowNumber, int width, int height, bool rowIsSelected) override;
@@ -80,6 +84,7 @@ private:
     int _selectedProcessID = 0;
 
     juce::TableListBox _table { "process-table-list", this };
+    std::unique_ptr<juce::LookAndFeel> _headerLookAndFeel;
     std::vector<OnProcessChosenListener*> _processChosenListeners;
     std::vector<OnProcessCaptureListener*> _processCaptureListeners;
 
