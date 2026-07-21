@@ -172,20 +172,47 @@ void ProcessTable::refreshProcessList()
     recomputeFilteredRows();
 }
 
-void ProcessTable::addOnProcessChosenListener(OnProcessChosenListener* listener)
+void ProcessTable::addOnProcessCaptureListener(OnProcessCaptureListener* listener)
 {
-    _listeners.push_back(listener);
+    _processCaptureListeners.push_back(listener);
 }
 
-void ProcessTable::removeListener(OnProcessChosenListener* listener)
+void ProcessTable::removeOnProcessCaptureListener(OnProcessCaptureListener* listener)
 {
-    _listeners.erase(std::remove(_listeners.begin(), _listeners.end(), listener), _listeners.end());
+    _processCaptureListeners.erase(std::remove(_processCaptureListeners.begin(), _processCaptureListeners.end(), listener), _processCaptureListeners.end());
+}
+
+void ProcessTable::addOnProcessChosenListener(OnProcessChosenListener* listener)
+{
+    _processChosenListeners.push_back(listener);
+}
+
+void ProcessTable::removeOnProcessChosenListener(OnProcessChosenListener* listener)
+{
+    _processChosenListeners.erase(std::remove(_processChosenListeners.begin(), _processChosenListeners.end(), listener), _processChosenListeners.end());
 }
 
 void ProcessTable::setHighlightedProcessID(int processID)
 {
     _highlightedProcessID = processID;
     repaint();
+}
+
+void ProcessTable::setSelectedProcessID(int processID)
+{
+    _selectedProcessID = processID;
+    repaint();
+}
+
+std::optional<audiocapture::ProcessInfo> ProcessTable::getProcess(int processID)
+{
+    const auto it = std::find_if(_allProcesses.begin(), _allProcesses.end(),
+        [processID](const audiocapture::ProcessInfo& process) { return process.processID == processID; });
+
+    if (it != _allProcesses.end())
+        return *it;
+
+    return std::nullopt;
 }
 
 int ProcessTable::getNumRows()
@@ -291,12 +318,17 @@ juce::Component* ProcessTable::refreshComponentForCell(int rowNumber, int column
 
 void ProcessTable::cellDoubleClicked(int rowNumber, int /*columnId*/, const juce::MouseEvent&)
 {
+    notifyProcessCapture(rowNumber);
+}
+
+void ProcessTable::cellClicked(int rowNumber, int /*columnId*/, const juce::MouseEvent&)
+{
     notifyProcessChosen(rowNumber);
 }
 
 void ProcessTable::returnKeyPressed(int lastRowSelected)
 {
-    notifyProcessChosen(lastRowSelected);
+    notifyProcessCapture(lastRowSelected);
 }
 
 void ProcessTable::sortOrderChanged(int newSortColumnId, bool isForwards)
@@ -377,11 +409,23 @@ void ProcessTable::applyThemeColours()
 void ProcessTable::notifyProcessChosen(int row)
 {
     if (row < 0 || row >= (int) _filteredProcesses.size())
+    return;
+    
+    const auto process = _filteredProcesses[(size_t) row];
+    _selectedProcessID = process.processID;
+
+    for (auto* listener : _processChosenListeners)
+        listener->onProcessChosen(process);
+}
+
+void ProcessTable::notifyProcessCapture(int row)
+{
+    if (row < 0 || row >= (int) _filteredProcesses.size())
         return;
 
     const auto process = _filteredProcesses[(size_t) row];
-    for (auto* listener : _listeners)
-        listener->onProcessChosen(process);
+    for (auto* listener : _processCaptureListeners)
+        listener->onProcessCapture(process);
 }
 
 void ProcessTable::changeListenerCallback(juce::ChangeBroadcaster* source)

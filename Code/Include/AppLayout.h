@@ -12,10 +12,10 @@
 
 class AppLayout final : public nlayout::AppLayout,
                          public nelement::SVGButton::OnClickListener,
-                         public nelement::TextButton::OnClickListener,
                          public nelement::TextInput::OnValueChangedListener,
                          public nelement::ComboBox::OnValueChangedListener,
                          public nelement::TwoWaySwitch::OnValueChangedListener,
+                         public component::ProcessTable::OnProcessCaptureListener,
                          public component::ProcessTable::OnProcessChosenListener
 {
 public:
@@ -29,6 +29,7 @@ public:
     void onButtonClick(const std::string& componentID) override;
     void onValueChanged(const std::string& componentID, const std::string& newValue) override;
     void onSelectionChanged(const std::string& componentID, int selectedId) override;
+    void onProcessCapture(const audiocapture::ProcessInfo& process) override;
     void onProcessChosen(const audiocapture::ProcessInfo& process) override;
 
 private:
@@ -45,7 +46,9 @@ private:
 
     component::PerformanceMonitor _performanceMonitor;
     component::CaptureStatus _captureStatus;
-    nelement::TextButton _stopCaptureButton;
+    nelement::SVGButton _captureButton;
+
+    int _selectedProcessID = 0;
 
     nlayout::WindowsManager _windowsManager;
 

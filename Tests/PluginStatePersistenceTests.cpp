@@ -86,3 +86,31 @@ TEST_CASE("PluginAudioProcessor never trusts a stale stored PID to re-resolve, o
     // must not silently latch onto it just because the PID happens to line up.
     CHECK(restored.isCapturing() == false);
 }
+
+TEST_CASE("PluginAudioProcessor does not reacquire a process after an explicit stop, even if it's still running", "[PluginStatePersistence]")
+{
+    PluginAudioProcessor processor;
+
+    const auto realProcesses = audiocapture::ProcessList::getAllProcesses();
+    if (realProcesses.empty())
+        return; // ProcessList unsupported on this platform/CI runner - nothing to verify here
+
+    const auto& realProcess = realProcesses.front();
+    processor.selectProcess(realProcess.processID, realProcess.name, realProcess.executablePath);
+    CHECK(processor.isCapturing() == true);
+
+    processor.stopCapturing();
+    CHECK(processor.isCapturing() == false);
+
+    juce::MemoryBlock state;
+    processor.getStateInformation(state);
+
+    PluginAudioProcessor restored;
+    restored.setStateInformation(state.getData(), (int) state.getSize());
+
+    // realProcess is genuinely still running, so re-acquisition WOULD succeed if attempted - an
+    // explicit stop before closing the plugin must mean nothing capturing on reopen regardless.
+    CHECK(restored.isCapturing() == false);
+    CHECK(restored.getLastProcessName().empty());
+    CHECK(restored.getLastProcessExecutablePath().empty());
+}

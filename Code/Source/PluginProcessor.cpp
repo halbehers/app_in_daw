@@ -78,6 +78,14 @@ void PluginAudioProcessor::stopCapturing()
 {
     _processCapture->stopCapture();
     _isCapturing = false;
+
+    // An explicit stop means "capture nothing", not "remember this for next time" - clearing the
+    // identity here (rather than only the flag) is what makes tryReacquireLastProcess() correctly
+    // no-op on the next reload (its empty-name/path guard), instead of resuming a capture the user
+    // deliberately turned off before closing the plugin.
+    _lastProcessID = 0;
+    _lastProcessName.clear();
+    _lastProcessExecutablePath.clear();
 }
 
 void PluginAudioProcessor::tryReacquireLastProcess()

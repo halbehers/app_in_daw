@@ -18,6 +18,11 @@ public:
         virtual ~OnProcessChosenListener() = default;
         virtual void onProcessChosen(const audiocapture::ProcessInfo& process) = 0;
     };
+    struct OnProcessCaptureListener
+    {
+        virtual ~OnProcessCaptureListener() = default;
+        virtual void onProcessCapture(const audiocapture::ProcessInfo& process) = 0;
+    };
 
     explicit ProcessTable(const std::string& identifier);
     ~ProcessTable() override;
@@ -32,10 +37,17 @@ public:
 
     void refreshProcessList();
 
+    void addOnProcessCaptureListener(OnProcessCaptureListener* listener);
+    void removeOnProcessCaptureListener(OnProcessCaptureListener* listener);
     void addOnProcessChosenListener(OnProcessChosenListener* listener);
-    void removeListener(OnProcessChosenListener* listener);
+    void removeOnProcessChosenListener(OnProcessChosenListener* listener);
 
     void setHighlightedProcessID(int processID);
+    void setSelectedProcessID(int processID);
+    int getSelectedProcessID() { return _selectedProcessID; }
+    bool hasSelectedProcess() { return _selectedProcessID != 0; }
+
+    std::optional<audiocapture::ProcessInfo> getProcess(int processID);
 
 private:
     enum ColumnId { NameColumn = 1, CategoryColumn, PidColumn };
@@ -46,6 +58,7 @@ private:
     void paintRowBackground(juce::Graphics&, int rowNumber, int width, int height, bool rowIsSelected) override;
     void paintCell(juce::Graphics&, int rowNumber, int columnId, int width, int height, bool rowIsSelected) override;
     juce::Component* refreshComponentForCell(int rowNumber, int columnId, bool isRowSelected, juce::Component* existingComponentToUpdate) override;
+    void cellClicked(int rowNumber, int columnId, const juce::MouseEvent&) override;
     void cellDoubleClicked(int rowNumber, int columnId, const juce::MouseEvent&) override;
     void returnKeyPressed(int lastRowSelected) override;
     void sortOrderChanged(int newSortColumnId, bool isForwards) override;
@@ -58,14 +71,17 @@ private:
     void sortFilteredProcesses(int sortColumnId, bool isForwards);
     void applyThemeColours();
     void notifyProcessChosen(int row);
+    void notifyProcessCapture(int row);
 
     std::vector<audiocapture::ProcessInfo> _allProcesses;
     std::vector<audiocapture::ProcessInfo> _filteredProcesses;
     ProcessFilterOptions _filterOptions;
     int _highlightedProcessID = 0;
+    int _selectedProcessID = 0;
 
     juce::TableListBox _table { "process-table-list", this };
-    std::vector<OnProcessChosenListener*> _listeners;
+    std::vector<OnProcessChosenListener*> _processChosenListeners;
+    std::vector<OnProcessCaptureListener*> _processCaptureListeners;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ProcessTable)
 };

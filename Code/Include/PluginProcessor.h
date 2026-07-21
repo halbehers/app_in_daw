@@ -72,6 +72,10 @@ public:
 
     // Starts capturing the given process's audio, replacing whatever was being captured before.
     void selectProcess(int processID, const std::string& name, const std::string& executablePath);
+    // Also forgets the last-selected process identity (not just the capturing flag), so that if
+    // the plugin is closed right after an explicit stop, reopening it does NOT reacquire and
+    // resume capturing - only an explicit stop does this; an active capture at close time is
+    // still meant to resume on reopen, via tryReacquireLastProcess().
     void stopCapturing();
     // Reflects whether a capture target is currently selected/active, not the SystemAudioTap's
     // literal internal state (ProcessAudioCapture doesn't expose that) - false right after
