@@ -39,6 +39,7 @@ private:
     PluginAudioProcessor& _audioProcessor;
 
     nelement::SVGButton _settings;
+
     nelement::TextInput _searchBar;
     nelement::ComboBox _categoryFilter;
     nelement::TwoWaySwitch _hideBackgroundSwitch;

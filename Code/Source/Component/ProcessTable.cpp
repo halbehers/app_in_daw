@@ -137,13 +137,16 @@ ProcessTable::ProcessTable(const std::string& identifier)
     nui::Theme::getChangeBroadcaster().addChangeListener(this);
     AppLocalisation::getChangeBroadcaster().addChangeListener(this);
 
+    _captureIcon.setIconSize(18.f);
+    _captureIcon.setColour(nui::Theme::newColor(nui::Theme::ThemeColor::ACCENT).asJuce());
+    _captureIcon.setInterceptsMouseClicks(false, false);
+    addChildComponent(_captureIcon);
+
     refreshProcessList();
 }
 
 ProcessTable::~ProcessTable()
 {
-    // Detach before _headerLookAndFeel is destroyed - the header must never hold a dangling
-    // LookAndFeel pointer, even briefly during member teardown.
     _table.getHeader().setLookAndFeel(nullptr);
 
     nui::Theme::getChangeBroadcaster().removeChangeListener(this);
@@ -157,12 +160,6 @@ void ProcessTable::paint(juce::Graphics& g)
 
 void ProcessTable::paintOverChildren(juce::Graphics& g)
 {
-    // juce::TableListBox/ListBox always paint flat rectangular fills with no rounding support of
-    // their own, and JUCE clips paint() to each component's own bounds before painting children
-    // (the clip doesn't carry over), so reducing the clip region in paint() can't round _table's
-    // corners. Instead, mask the 4 sharp corners after _table has painted: building a path from
-    // the full rect XOR'd (even-odd winding) with the rounded rect isolates just the corner
-    // slivers, which get painted over in the surrounding background colour.
     const auto bounds = getLocalBounds().toFloat();
     const auto radius = nui::Theme::getBorderRadius();
 
@@ -180,6 +177,7 @@ void ProcessTable::resized()
     Component::resized();
 
     _table.setBounds(getLocalBounds());
+    updateCaptureIconPosition();
 }
 
 void ProcessTable::visibilityChanged()
@@ -242,6 +240,7 @@ void ProcessTable::removeOnProcessChosenListener(OnProcessChosenListener* listen
 void ProcessTable::setHighlightedProcessID(int processID)
 {
     _highlightedProcessID = processID;
+    updateCaptureIconPosition();
     repaint();
 }
 
@@ -296,7 +295,6 @@ void ProcessTable::paintCell(juce::Graphics& g, int rowNumber, int columnId, int
 
     constexpr int textPadding = 8;
     constexpr float dotSize = 6.f;
-    constexpr float captureIconSize = 18.f;
 
     g.setFont(nui::Theme::newFont(nui::Theme::REGULAR, nui::Theme::PARAGRAPH));
 
@@ -307,10 +305,7 @@ void ProcessTable::paintCell(juce::Graphics& g, int rowNumber, int columnId, int
     {
         case StatusColumn:
         {
-            if (process.processID == _highlightedProcessID)
-            {
-                nui::helpers::drawFromSVG(g, nui::Icons::getCapture(), nui::Theme::newColor(nui::Theme::ThemeColor::ACCENT).asHexString(), (float) height / 2.f - captureIconSize / 2.f, (float) height / 2.f - captureIconSize / 2.f, captureIconSize, captureIconSize, juce::AffineTransform());
-            } else if (process.processID == _selectedProcessID)
+            if (process.processID != _highlightedProcessID && process.processID == _selectedProcessID)
             {
                 g.setColour(nui::Theme::newColor(nui::Theme::ThemeColor::ACCENT).asJuce().withAlpha(.8f));
                 g.fillEllipse((float) height / 2.f - dotSize / 2.f, (float) height / 2.f - dotSize / 2.f, dotSize, dotSize);
@@ -387,6 +382,7 @@ void ProcessTable::sortOrderChanged(int newSortColumnId, bool isForwards)
 {
     sortFilteredProcesses(newSortColumnId, isForwards);
     _table.updateContent();
+    updateCaptureIconPosition();
 }
 
 juce::String ProcessTable::getCellTooltip(int rowNumber, int /*columnId*/)
@@ -395,6 +391,11 @@ juce::String ProcessTable::getCellTooltip(int rowNumber, int /*columnId*/)
         return {};
 
     return juce::String(_filteredProcesses[(size_t) rowNumber].executablePath);
+}
+
+void ProcessTable::listWasScrolled()
+{
+    updateCaptureIconPosition();
 }
 
 void ProcessTable::timerCallback()
@@ -410,6 +411,7 @@ void ProcessTable::recomputeFilteredRows()
     sortFilteredProcesses(header.getSortColumnId(), header.isSortedForwards());
 
     _table.updateContent();
+    updateCaptureIconPosition();
     repaint();
 }
 
@@ -479,6 +481,30 @@ void ProcessTable::notifyProcessCapture(int row)
     const auto process = _filteredProcesses[(size_t) row];
     for (auto* listener : _processCaptureListeners)
         listener->onProcessCapture(process);
+}
+
+void ProcessTable::updateCaptureIconPosition()
+{
+    const auto it = std::find_if(_filteredProcesses.begin(), _filteredProcesses.end(),
+        [this](const audiocapture::ProcessInfo& process) { return process.processID == _highlightedProcessID; });
+
+    if (_highlightedProcessID == 0 || it == _filteredProcesses.end())
+    {
+        _captureIcon.setVisible(false);
+        return;
+    }
+
+    const auto rowNumber = (int) std::distance(_filteredProcesses.begin(), it);
+    const auto rowBounds = _table.getRowPosition(rowNumber, true);
+
+    if (!_table.getLocalBounds().intersects(rowBounds))
+    {
+        _captureIcon.setVisible(false);
+        return;
+    }
+
+    _captureIcon.setBounds(0, rowBounds.getY(), rowHeight, rowBounds.getHeight());
+    _captureIcon.setVisible(true);
 }
 
 void ProcessTable::changeListenerCallback(juce::ChangeBroadcaster* source)
