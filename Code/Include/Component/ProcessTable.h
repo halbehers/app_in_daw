@@ -67,6 +67,7 @@ private:
     void returnKeyPressed(int lastRowSelected) override;
     void sortOrderChanged(int newSortColumnId, bool isForwards) override;
     juce::String getCellTooltip(int rowNumber, int columnId) override;
+    void listWasScrolled() override;
 
     void timerCallback() override;
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
@@ -76,12 +77,15 @@ private:
     void applyThemeColours();
     void notifyProcessChosen(int row);
     void notifyProcessCapture(int row);
+    void updateCaptureIconPosition();
 
     std::vector<audiocapture::ProcessInfo> _allProcesses;
     std::vector<audiocapture::ProcessInfo> _filteredProcesses;
     ProcessFilterOptions _filterOptions;
     int _highlightedProcessID = 0;
     int _selectedProcessID = 0;
+
+    nelement::AnimatedSVG _captureIcon { "animated-capture-icon", nui::AnimatedIcons::getCapture() };
 
     juce::TableListBox _table { "process-table-list", this };
     std::unique_ptr<juce::LookAndFeel> _headerLookAndFeel;
