@@ -61,11 +61,12 @@ OutputSettings::OutputSettings(const std::string& identifier, PluginAudioProcess
         if (auto* holder = juce::StandalonePluginHolder::getInstance())
         {
             _deviceManager = &holder->deviceManager;
+            _devicesComboBox.setDeviceManager(_deviceManager);
 
-            _devicesComboBox.refreshDevices(juce::dontSendNotification);
+            _devicesComboBox.getComboBox().refreshDevices(juce::dontSendNotification);
             syncDeviceComboBoxesFromCurrentState();
 
-            _devicesComboBox.addOnValueChangedListener(this);
+            _devicesComboBox.getComboBox().addOnValueChangedListener(this);
             _sampleRateComboBox.addOnValueChangedListener(this);
             _bufferSizeComboBox.addOnValueChangedListener(this);
 
@@ -79,7 +80,7 @@ OutputSettings::OutputSettings(const std::string& identifier, PluginAudioProcess
 OutputSettings::~OutputSettings()
 {
     _trimSwitch.removeListener(this);
-    _devicesComboBox.removeListener(this);
+    _devicesComboBox.getComboBox().removeListener(this);
     _sampleRateComboBox.removeListener(this);
     _bufferSizeComboBox.removeListener(this);
 
@@ -135,9 +136,9 @@ void OutputSettings::onSelectionChanged(const std::string& componentID, int sele
         _deviceManager->setAudioDeviceSetup(setup, true);
         syncDeviceComboBoxesFromCurrentState();
     }
-    else if (componentID == _devicesComboBox.getComponentID())
+    else if (componentID == _devicesComboBox.getComboBox().getComponentID())
     {
-        const auto& device = _devicesComboBox.getSelectedDevice();
+        const auto& device = _devicesComboBox.getComboBox().getSelectedDevice();
 
         switch (device.kind)
         {
@@ -184,10 +185,10 @@ void OutputSettings::syncDeviceComboBoxesFromCurrentState()
     _bufferSizeComboBox.setSelectedBufferSize(setup.bufferSize, juce::dontSendNotification);
 
     if (auto* currentDevice = _deviceManager->getCurrentAudioDevice())
-        _devicesComboBox.setSelectedDevice(ndsp::AudioOutputDeviceKind::DEVICE, currentDevice->getName(),
-                                            currentDevice->getTypeName(), juce::dontSendNotification);
+        _devicesComboBox.getComboBox().setSelectedDevice(ndsp::AudioOutputDeviceKind::DEVICE, currentDevice->getName(),
+                                                          currentDevice->getTypeName(), juce::dontSendNotification);
     else
-        _devicesComboBox.setSelectedDevice(ndsp::AudioOutputDeviceKind::NO_DEVICE, {}, {}, juce::dontSendNotification);
+        _devicesComboBox.getComboBox().setSelectedDevice(ndsp::AudioOutputDeviceKind::NO_DEVICE, {}, {}, juce::dontSendNotification);
 }
 
 void OutputSettings::changeListenerCallback(juce::ChangeBroadcaster* source)

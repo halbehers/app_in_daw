@@ -39,7 +39,7 @@ private:
     nelement::ThreeWaySwitch _trimSwitch { "output-trim-switch", juce::translate("output_settings_trim_0db").toStdString(), juce::translate("output_settings_trim_neg6db").toStdString(), juce::translate("output_settings_trim_neg12db").toStdString() };
 
     nelement::Text _devicesLabel { "output-settings-devices-label", "", juce::translate("output_settings_devices_label").toStdString() };
-    nelement::DevicesComboBox _devicesComboBox { "output-devices-combobox" };
+    nelement::DevicesComboBoxWithConfig _devicesComboBox { "output-devices-combobox" };
     nelement::Text _sampleRateLabel { "output-settings-sample-rate-label", "", juce::translate("output_settings_sample_rate_label").toStdString() };
     nelement::SampleRateComboBox _sampleRateComboBox { "output-sample-rate-combobox" };
     nelement::Text _bufferSizeLabel { "output-settings-buffer-size-label", "", juce::translate("output_settings_buffer_size_label").toStdString() };
