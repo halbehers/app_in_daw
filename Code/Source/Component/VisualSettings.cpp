@@ -31,6 +31,8 @@ VisualSettings::VisualSettings(const std::string& identifier):
     _layout.setDisplayGrid(false);
     _layout.init({ 1, 1, 1 }, { 1, 4 });
 
+    _layout.setFixedRowHeight(0, 32.f);
+
     _layout.addComponent(_title, 0, 0, 2, 1);
     _layout.addComponent(_latencyLabel, 1, 1, 1, 1);
     _layout.addComponent(_latencyToggle, 1, 0, 1, 1);
@@ -66,12 +68,6 @@ void VisualSettings::resized()
     const auto latencyToggleCell = _layout.getBounds(_latencyToggle.getID());
     _latencyToggle.setBounds(juce::Rectangle<float>((float) toggleWidth, (float) toggleHeight)
         .withPosition(getControlX(latencyToggleCell, (float) toggleWidth), latencyToggleCell.getCentreY() - (float) toggleHeight / 2.f).toNearestInt());
-
-    constexpr int switchWidth = 150;
-
-    const auto themeToggleCell = _layout.getBounds(_themeSwitch.getID());
-    _themeSwitch.setBounds(juce::Rectangle<float>((float) switchWidth, (float) _themeSwitch.getHeight())
-        .withPosition(getControlX(themeToggleCell, (float) switchWidth), themeToggleCell.getCentreY() - (float) _themeSwitch.getHeight() / 2.f).toNearestInt());
 }
 
 float VisualSettings::getControlX(const juce::Rectangle<float>& cell, float controlWidth)
