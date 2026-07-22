@@ -42,7 +42,11 @@ jobs:
             extra-flags: ""
 
     steps:
-      - uses: ilammy/msvc-dev-cmd@v1
+      # Puts cl.exe/MSVC on PATH for the Ninja generator - Windows only, the Visual Studio
+      # generator wouldn't need this, but Ninja doesn't auto-detect the toolchain.
+      - name: Set up MSVC (Windows)
+        if: ${{ runner.os == 'Windows' }}
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Install Ninja (macOS)
         if: ${{ runner.os == 'macOS' }}

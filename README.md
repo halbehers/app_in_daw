@@ -72,6 +72,33 @@ validation pass against the built AU (parameter automation, state save/restore, 
 repeated editor open/close). See `build/Tests/AppInDAW_Tests --help` for running a subset of tests
 by name or tag.
 
+## Continuous integration
+
+`.github/workflows/build_and_test.yml` runs on GitHub Actions:
+
+- **When it runs**: on every push to any branch, on every pull request (a same-repo PR is skipped
+  since the matching push event already covers it — only PRs from forks trigger separately), and
+  on demand via the Actions tab's "Run workflow" button (`workflow_dispatch`).
+- **What it does**: builds a matrix of macOS (universal `arm64`+`x86_64`) and Windows, each of
+  which configures and builds a Release, runs `ctest` (the Catch2 suite plus the `pluginval`
+  validation pass), then uploads the resulting installer as a workflow artifact, downloadable from
+  that run's summary page.
+- **Artifact generation/signing**: the installer itself is produced by the *same* Release build
+  described in [Installers](#installers) above (`CMake/packaging.cmake`) — CI doesn't package
+  anything separately or differently from a local `cmake --workflow --preset release`. Signing is
+  the only thing that differs by environment: it's ad-hoc/unsigned unless the corresponding
+  repository secrets are configured, so the workflow always produces something installable even
+  without a paid signing setup:
+  - macOS: imports a Developer ID Application/Installer certificate from the `DEV_ID_APP_CERT` /
+    `DEV_ID_APP_PASSWORD` / `DEV_ID_INSTALLER_CERT` / `DEV_ID_INSTALLER_PASSWORD` secrets, then
+    notarizes and staples the `.pkg` if `NOTARIZATION_USERNAME` / `NOTARIZATION_PASSWORD` /
+    `TEAM_ID` are also set.
+  - Windows: signs the `.exe` via Azure Artifact Signing if `AZURE_TENANT_ID` (and the other
+    `AZURE_*` secrets) are set.
+- **Releases**: pushing a tag matching `v*` (e.g. `v1.2.0`) additionally runs the `release` job,
+  which downloads both installers from that run and attaches them to a new pre-release GitHub
+  Release — no separate manual publish step needed.
+
 ## Customizing process categories
 
 Which category an app falls into (Music & Media, Browsers, Communication & Meetings, Creative &
