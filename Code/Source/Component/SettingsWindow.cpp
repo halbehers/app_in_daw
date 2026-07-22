@@ -28,7 +28,7 @@ SettingsWindow::SettingsWindow(const std::string& identifier, nlayout::WindowsMa
 
     _layout.setGap(24.f);
     _layout.setDisplayGrid(false);
-    _layout.init({ 1, 3, 3 }, { 1, 1 });
+    _layout.init({ 1, 3, 3 }, { 4, 5 });
 
     _layout.setFixedRowHeight(0, 42.f);
 
