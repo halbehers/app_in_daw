@@ -455,7 +455,7 @@ void ProcessTable::applyThemeColours()
     _table.setColour(juce::ListBox::outlineColourId, border);
     _table.setColour(juce::ListBox::textColourId, text);
 
-    _table.getHeader().setColour(juce::TableHeaderComponent::backgroundColourId, primary);
+    _table.getHeader().setColour(juce::TableHeaderComponent::backgroundColourId, accent.withAlpha(0.05f));
     _table.getHeader().setColour(juce::TableHeaderComponent::textColourId, text);
     _table.getHeader().setColour(juce::TableHeaderComponent::outlineColourId, border);
     _table.getHeader().setColour(juce::TableHeaderComponent::highlightColourId, accent.withAlpha(0.3f));

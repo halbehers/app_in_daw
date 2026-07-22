@@ -24,6 +24,12 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    # `secrets` can't be referenced directly in a step's `if:` (GitHub's expression parser doesn't
+    # expose that context there, only in `env:`/`with:` values) - these convert the presence check
+    # into job-level env vars instead, which the steps' `if:` below check.
+    env:
+      HAS_DEV_ID_APP_CERT: ${{ secrets.DEV_ID_APP_CERT != '' }}
+      HAS_AZURE_SIGNING: ${{ secrets.AZURE_TENANT_ID != '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -59,7 +65,7 @@ jobs:
       - name: Import Developer ID certificates (macOS)
         uses: sudara/basic-macos-keychain-action@v1
         id: keychain
-        if: ${{ runner.os == 'macOS' && secrets.DEV_ID_APP_CERT != '' }}
+        if: ${{ runner.os == 'macOS' && env.HAS_DEV_ID_APP_CERT == 'true' }}
         with:
           dev-id-app-cert: ${{ secrets.DEV_ID_APP_CERT }}
           dev-id-app-password: ${{ secrets.DEV_ID_APP_PASSWORD }}
@@ -96,7 +102,7 @@ jobs:
         run: ctest --output-on-failure
 
       - name: Codesign with Azure Artifact Signing (Windows)
-        if: ${{ runner.os == 'Windows' && secrets.AZURE_TENANT_ID != '' }}
+        if: ${{ runner.os == 'Windows' && env.HAS_AZURE_SIGNING == 'true' }}
         uses: azure/artifact-signing-action@v2
         with:
           azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
