@@ -19,8 +19,16 @@ set(SOURCE_DIR "Code/Source")
 set(CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
 set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Libs")
 
+# $ENV{USER}/$ENV{HOME} are unset on Windows (uses $ENV{USERNAME}/$ENV{USERPROFILE} instead), so
+# resolve the dev home per-platform rather than hardcoding a path that only works on one OS.
+if (WIN32)
+    set(LOCAL_DSP_DEV_DIR "$ENV{USERPROFILE}/Development")
+else ()
+    set(LOCAL_DSP_DEV_DIR "$ENV{HOME}/Development")
+endif ()
+
 set(USE_LOCAL_NIERIKA_DSP ON)
-set(LOCAL_NIERIKA_DSP_PATH "/Users/$ENV{USER}/Development/nierika_dsp") # Change for your local path to the nierika_dsp module if you want to use a local version instead of the remote package.
+set(LOCAL_NIERIKA_DSP_PATH "${LOCAL_DSP_DEV_DIR}/nierika_dsp") # Change for your local path to the nierika_dsp module if you want to use a local version instead of the remote package.
 
 if (USE_LOCAL_NIERIKA_DSP AND NOT EXISTS "${LOCAL_NIERIKA_DSP_PATH}")
     message(STATUS "Local module 'nierika_dsp' with path '${LOCAL_NIERIKA_DSP_PATH}' not found. Falling back to remote package.")
@@ -28,7 +36,7 @@ if (USE_LOCAL_NIERIKA_DSP AND NOT EXISTS "${LOCAL_NIERIKA_DSP_PATH}")
 endif()
 
 set(USE_LOCAL_AUDIO_CAPTURE_DSP ON)
-set(LOCAL_AUDIO_CAPTURE_DSP_PATH "/Users/$ENV{USER}/Development/audio_capture_dsp") # Change for your local path to the audio_capture_dsp module if you want to use a local version instead of the remote package.
+set(LOCAL_AUDIO_CAPTURE_DSP_PATH "${LOCAL_DSP_DEV_DIR}/audio_capture_dsp") # Change for your local path to the audio_capture_dsp module if you want to use a local version instead of the remote package.
 
 if (USE_LOCAL_AUDIO_CAPTURE_DSP AND NOT EXISTS "${LOCAL_AUDIO_CAPTURE_DSP_PATH}")
     message(STATUS "Local module 'audio_capture_dsp' with path '${LOCAL_AUDIO_CAPTURE_DSP_PATH}' not found. Falling back to remote package.")

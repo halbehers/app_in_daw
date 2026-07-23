@@ -27,6 +27,19 @@ void styleNativeTitleBar(juce::DocumentWindow& window, juce::Colour backgroundCo
     DwmSetWindowAttribute(hwnd, dwmwaCaptionColor, &colour, sizeof(colour));
 }
 
+void setNativeTitleVisible(juce::DocumentWindow& window, bool visible)
+{
+    auto* peer = window.getPeer();
+    if (peer == nullptr)
+        return;
+
+    auto hwnd = (HWND) peer->getNativeHandle();
+
+    // Blanking the caption text (rather than touching WS_CAPTION or the icon) leaves the icon and
+    // min/maximize/close buttons exactly where they are - only the title text itself disappears.
+    ::SetWindowTextW(hwnd, visible ? window.getName().toWideCharPointer() : L"");
+}
+
 }
 
 #elif ! JUCE_MAC
@@ -34,6 +47,7 @@ void styleNativeTitleBar(juce::DocumentWindow& window, juce::Colour backgroundCo
 namespace standalone
 {
 void styleNativeTitleBar(juce::DocumentWindow&, juce::Colour, float) {}
+void setNativeTitleVisible(juce::DocumentWindow&, bool) {}
 }
 
 #endif

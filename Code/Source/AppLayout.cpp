@@ -106,7 +106,12 @@ AppLayout::AppLayout(ndsp::ParameterManager& parameterManager, PluginAudioProces
     getLayout().setDisplayGrid(false);
     getLayout().setResizableLineConfiguration({ .displayLine = false });
 
+#if JUCE_MAC
     getLayout().setMargin(24.f, 24.f + 16.f, 24.f, 24.f);
+#else
+    getLayout().setMargin(24.f, 0.f, 24.f, 24.f);
+#endif
+
     getLayout().init({ 6, 48, 2, 4 }, { 2, 27, 4, 1, 15, 14 });
 
     getLayout().setFixedRowHeight(0, 60.f);

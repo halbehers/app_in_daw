@@ -12,4 +12,10 @@ namespace standalone
 
 void styleNativeTitleBar(juce::DocumentWindow& window, juce::Colour backgroundColour, float titleBarHeight);
 
+// Toggles the native OS-drawn title text in the standalone window's title bar (icon and
+// min/maximize/close buttons are untouched). A harmless no-op on macOS, where the native title is
+// already permanently hidden in favour of a custom overlay label instead (see StandaloneApp.cpp) -
+// this only meaningfully does anything on Windows.
+void setNativeTitleVisible(juce::DocumentWindow& window, bool visible);
+
 }

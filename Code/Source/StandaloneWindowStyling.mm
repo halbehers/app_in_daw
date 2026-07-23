@@ -184,6 +184,11 @@ void styleNativeTitleBar(juce::DocumentWindow& window, juce::Colour, float)
     [positioner release];
 }
 
+// No-op here: the native title is already permanently hidden by styleNativeTitleBar() above
+// (NSWindowTitleHidden), in favour of StandaloneApp.cpp's own _titleLabel overlay - there's no
+// native title text left for this to toggle on macOS.
+void setNativeTitleVisible(juce::DocumentWindow&, bool) {}
+
 }
 
 #endif // JUCE_MAC

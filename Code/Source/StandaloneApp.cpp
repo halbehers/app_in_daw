@@ -113,8 +113,21 @@ public:
             getApplicationName(), backgroundColour,
             appProperties.getUserSettings(), false);
 
+        // Re-read the theme colour now that mainWindow's construction has run the plugin
+        // processor's constructor (which is what actually calls nui::Theme::configure() with the
+        // app's real palette) - backgroundColour above was captured before that ran, so it's still
+        // nierika_dsp's built-in default preset background, not this app's configured one. Only
+        // matters on Windows: styleNativeTitleBar() ignores this argument entirely on macOS (it
+        // makes the title bar transparent and lets the correctly-themed content paint through
+        // instead), so this staleness was invisible there.
+        const auto captionColour = nui::Theme::newColor (nui::Theme::ThemeColor::BACKGROUND).asJuce();
+
         mainWindow->setUsingNativeTitleBar (true);
-        standalone::styleNativeTitleBar (*mainWindow, backgroundColour, (float) titleBarHeight);
+        standalone::styleNativeTitleBar (*mainWindow, captionColour, (float) titleBarHeight);
+        AppSettings::getInstance().setShowStandaloneTitle(false);
+        // No-op on macOS - the native title there is already permanently hidden in favour of
+        // _titleLabel below, which is what actually reads this setting on that platform.
+        standalone::setNativeTitleVisible (*mainWindow, AppSettings::getInstance().getShowStandaloneTitle());
 
        #if JUCE_MAC
         // ResizableWindow re-declares addAndMakeVisible as protected (it normally only wants a
@@ -123,7 +136,6 @@ public:
         auto& windowAsComponent = static_cast<juce::Component&> (*mainWindow);
         windowAsComponent.addAndMakeVisible (_dragRegion);
         windowAsComponent.addAndMakeVisible (_titleLabel);
-        AppSettings::getInstance().setShowStandaloneTitle(false);
         _titleLabel.setVisible (AppSettings::getInstance().getShowStandaloneTitle());
         mainWindow->addComponentListener (this);
         positionTitleBarChildren();
