@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
-# Packages the built AU + VST3 bundles into a single macOS installer .pkg.
+# Packages the built AU + VST3 + Standalone bundles into a single macOS installer .pkg. Each
+# component is a separate, individually-toggleable choice in the resulting installer (see
+# Packaging/macos/distribution.xml.template) - VST3/AU install as plugin components, Standalone
+# installs as a normal /Applications app.
 #
 # Invoked both by CMake/packaging.cmake (as part of `cmake --build --preset release`) and by
 # .github/workflows/build_and_test.yml in CI, so there's exactly one place this logic lives.
 #
-# Required env vars: PRODUCT_NAME, BUNDLE_ID, VERSION, AU_PATH, VST3_PATH, OUTPUT_DIR
+# Required env vars: PRODUCT_NAME, BUNDLE_ID, VERSION, AU_PATH, VST3_PATH, STANDALONE_PATH, OUTPUT_DIR
 # Optional env vars (real signing/notarization instead of ad-hoc, if all of the relevant ones are set):
 #   DEVELOPER_ID_APPLICATION, DEVELOPER_ID_INSTALLER,
 #   NOTARIZATION_USERNAME, NOTARIZATION_PASSWORD, NOTARIZATION_TEAM_ID
@@ -13,7 +16,7 @@
 
 set -euo pipefail
 
-: "${PRODUCT_NAME:?}" "${BUNDLE_ID:?}" "${VERSION:?}" "${AU_PATH:?}" "${VST3_PATH:?}" "${OUTPUT_DIR:?}"
+: "${PRODUCT_NAME:?}" "${BUNDLE_ID:?}" "${VERSION:?}" "${AU_PATH:?}" "${VST3_PATH:?}" "${STANDALONE_PATH:?}" "${OUTPUT_DIR:?}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGING_DIR="$SCRIPT_DIR/../Packaging/macos"
@@ -27,16 +30,20 @@ if [ -n "${DEVELOPER_ID_APPLICATION:-}" ]; then
     [ -n "${KEYCHAIN_PATH:-}" ] && keychain_args=(--keychain "$KEYCHAIN_PATH")
     codesign --force "${keychain_args[@]}" -s "$DEVELOPER_ID_APPLICATION" -v "$AU_PATH" --deep --strict --options=runtime --timestamp
     codesign --force "${keychain_args[@]}" -s "$DEVELOPER_ID_APPLICATION" -v "$VST3_PATH" --deep --strict --options=runtime --timestamp
+    codesign --force "${keychain_args[@]}" -s "$DEVELOPER_ID_APPLICATION" -v "$STANDALONE_PATH" --deep --strict --options=runtime --timestamp
 else
     echo "No DEVELOPER_ID_APPLICATION set - ad-hoc signing (fine for local testing, not for distribution)."
     codesign --force --deep --sign - "$AU_PATH"
     codesign --force --deep --sign - "$VST3_PATH"
+    codesign --force --deep --sign - "$STANDALONE_PATH"
 fi
 
 pkgbuild --identifier "$BUNDLE_ID.au.pkg" --version "$VERSION" --component "$AU_PATH" \
     --install-location "/Library/Audio/Plug-Ins/Components" "$WORK_DIR/$PRODUCT_NAME.au.pkg"
 pkgbuild --identifier "$BUNDLE_ID.vst3.pkg" --version "$VERSION" --component "$VST3_PATH" \
     --install-location "/Library/Audio/Plug-Ins/VST3" "$WORK_DIR/$PRODUCT_NAME.vst3.pkg"
+pkgbuild --identifier "$BUNDLE_ID.standalone.pkg" --version "$VERSION" --component "$STANDALONE_PATH" \
+    --install-location "/Applications" "$WORK_DIR/$PRODUCT_NAME.standalone.pkg"
 
 PRODUCT_NAME="$PRODUCT_NAME" BUNDLE_ID="$BUNDLE_ID" VERSION="$VERSION" \
     envsubst < "$PACKAGING_DIR/distribution.xml.template" > "$WORK_DIR/distribution.xml"

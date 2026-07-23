@@ -101,7 +101,7 @@ include(${CMAKE_DIR}/utils.cmake)
 
 juce_add_binary_data("${PROJECT_NAME}_Assets" SOURCES
         ${CMAKE_CURRENT_LIST_DIR}/Packaging/icon.iconset/icon_512x512@2x.png
-        ${CMAKE_CURRENT_LIST_DIR}/Packaging/icon.iconset/icon_128x128.png
+        ${CMAKE_CURRENT_LIST_DIR}/Packaging/icon.iconset/icon_128x128@2x.png
         ${CMAKE_CURRENT_LIST_DIR}/Assets/process_categories.json
         ${CMAKE_CURRENT_LIST_DIR}/Assets/Languages/en.lang
         ${CMAKE_CURRENT_LIST_DIR}/Assets/Languages/fr.lang
@@ -114,7 +114,7 @@ juce_add_binary_data("${PROJECT_NAME}_Assets" SOURCES
 juce_add_plugin(
         ${PROJECT_NAME}
         ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/icon.iconset/icon_512x512@2x.png"
-        ICON_SMALL "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/icon.iconset/icon_128x128.png"
+        ICON_SMALL "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/icon.iconset/icon_128x128@2x.png"
         COMPANY_NAME "${COMPANY_NAME}"
         BUNDLE_ID "${BUNDLE_ID}"
         PLUGIN_MANUFACTURER_CODE "${MANUFACTURER_CODE}"
