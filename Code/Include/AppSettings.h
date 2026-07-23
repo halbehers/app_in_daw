@@ -13,6 +13,11 @@ public:
     [[nodiscard]] bool getShowLatencyMonitor() const;
     void setShowLatencyMonitor(bool show);
 
+    // Standalone-only: whether the app name is drawn centered over the native title bar (see
+    // StandaloneApp.cpp) - has no effect on AU/VST3/AUv3, which don't have a title bar at all.
+    [[nodiscard]] bool getShowStandaloneTitle() const;
+    void setShowStandaloneTitle(bool show);
+
     [[nodiscard]] nui::Theme::Mode getThemeMode() const;
     void setThemeMode(nui::Theme::Mode mode);
 

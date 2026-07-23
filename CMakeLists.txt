@@ -125,7 +125,12 @@ juce_add_plugin(
         PLIST_TO_MERGE "<plist><dict><key>NSAudioCaptureUsageDescription</key><string>Used to capture audio from another application running on this system and route it into the plugin's own output.</string></dict></plist>"
 )
 
-file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS "${SOURCE_DIR}/*.cpp" "${SOURCE_DIR}/*.mm")
+file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS "${SOURCE_DIR}/*.cpp")
+if (APPLE)
+    # .mm (Objective-C++) only makes sense/compiles on Apple platforms.
+    file(GLOB_RECURSE ObjCSourceFiles CONFIGURE_DEPENDS "${SOURCE_DIR}/*.mm")
+    list(APPEND SourceFiles ${ObjCSourceFiles})
+endif ()
 file(GLOB_RECURSE HeaderFiles CONFIGURE_DEPENDS "${INCLUDE_DIR}/*.h")
 target_sources(${PROJECT_NAME} PRIVATE ${SourceFiles} )
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIR})
@@ -152,7 +157,14 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         "${PROJECT_NAME}_Assets"
 )
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC JUCE_VST3_CAN_REPLACE_VST2=0)
+if (WIN32)
+    # For StandaloneWindowStyling.cpp's DwmSetWindowAttribute() call (title-bar caption colour).
+    target_link_libraries(${PROJECT_NAME} PUBLIC dwmapi)
+endif ()
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+        JUCE_VST3_CAN_REPLACE_VST2=0
+        JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1)
 
 # Treat warnings as errors
 set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")

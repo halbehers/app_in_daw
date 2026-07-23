@@ -106,12 +106,13 @@ AppLayout::AppLayout(ndsp::ParameterManager& parameterManager, PluginAudioProces
     getLayout().setDisplayGrid(false);
     getLayout().setResizableLineConfiguration({ .displayLine = false });
 
-    getLayout().setMargin(24.f, 24.f, 24.f, 24.f);
+    getLayout().setMargin(24.f, 24.f + 16.f, 24.f, 24.f);
     getLayout().init({ 6, 48, 2, 4 }, { 2, 27, 4, 1, 15, 14 });
 
     getLayout().setFixedRowHeight(0, 60.f);
     getLayout().setFixedRowHeight(2, 20.f);
     getLayout().setFixedRowHeight(3, 40.f);
+    getLayout().setFixedColumnWidth(0, 32.f);
 
     getLayout().addComponent(_settings, 0, 0, 1, 1);
     getLayout().addComponent(_searchBar, 0, 1, 2, 1);
