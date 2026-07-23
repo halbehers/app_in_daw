@@ -100,7 +100,7 @@ void SettingsWindow::resized()
 
 juce::Rectangle<int> SettingsWindow::getCardBounds()
 {
-    constexpr int maxCardWidth = 550;
+    constexpr int maxCardWidth = 650;
     constexpr int maxCardHeight = 400;
 
     const auto margin = juce::jmax(32, juce::jmin(getWidth(), getHeight()) / 8);

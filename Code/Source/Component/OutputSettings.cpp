@@ -163,8 +163,18 @@ void OutputSettings::onSelectionChanged(const std::string& componentID, int sele
 
                 auto setup = _deviceManager->getAudioDeviceSetup();
                 setup.outputDeviceName = device.name;
-                if (device.numInputChannels > 0)
-                    setup.inputDeviceName = device.name;
+                setup.inputDeviceName = device.numInputChannels > 0 ? device.name : juce::String();
+
+                // Reset channel selection to sensible defaults for the *new* device - carrying
+                // over the previous device's outputChannels/inputChannels bitmask (e.g. a stereo
+                // pair picked via the channel-config popup) can point at channel indices the new
+                // device doesn't have, leaving it "selected" in the UI but silently producing no
+                // audio.
+                setup.useDefaultOutputChannels = true;
+                setup.useDefaultInputChannels = true;
+                setup.outputChannels.clear();
+                setup.inputChannels.clear();
+
                 _deviceManager->setAudioDeviceSetup(setup, true);
                 break;
             }

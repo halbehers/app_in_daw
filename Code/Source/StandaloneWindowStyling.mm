@@ -161,7 +161,7 @@ namespace
 namespace standalone
 {
 
-void styleNativeTitleBar(juce::DocumentWindow& window, juce::Colour, float)
+void styleNativeTitleBar(juce::DocumentWindow& window, juce::Colour backgroundColour, float)
 {
     NSWindow* nsWindow = getNSWindow(window);
     if (nsWindow == nil)
@@ -172,6 +172,24 @@ void styleNativeTitleBar(juce::DocumentWindow& window, juce::Colour, float)
     nsWindow.styleMask |= NSWindowStyleMaskFullSizeContentView;
     nsWindow.titlebarAppearsTransparent = YES;
     nsWindow.titleVisibility = NSWindowTitleHidden;
+
+    // With the title bar transparent, the window's own backgroundColor (AppKit's default is a
+    // light system colour) shows through anywhere JUCE's content view doesn't itself paint - a
+    // sub-pixel gap right at the top edge was showing up as a thin white line. Matching it to the
+    // app's own theme background means even that sliver is the right colour.
+    nsWindow.backgroundColor = [NSColor colorWithSRGBRed: backgroundColour.getFloatRed()
+                                                     green: backgroundColour.getFloatGreen()
+                                                      blue: backgroundColour.getFloatBlue()
+                                                     alpha: 1.f];
+
+    // backgroundColor alone didn't get rid of that line - AppKit also draws its own subtle
+    // highlight along a titled window's top border, coloured for whichever appearance (light/dark)
+    // the window is currently using. The window doesn't infer "dark" just because its content
+    // happens to be dark-filled, so without this it keeps using its light-appearance highlight
+    // colour, which reads as a stark white line against dark content.
+    nsWindow.appearance = [NSAppearance appearanceNamed: backgroundColour.getPerceivedBrightness() < 0.5f
+                                                          ? NSAppearanceNameDarkAqua
+                                                          : NSAppearanceNameAqua];
 
     // Belt-and-braces: the caller also implements dragging manually (JUCE's content view now
     // covers this area and owns its own mouse events instead of the OS), but this costs nothing
