@@ -24,9 +24,19 @@ TEST_CASE("PluginAudioProcessor::processBlock updates getCurrentLatencyMs from r
 
     // Diagnostics only surfaced by Catch2 if a CHECK below actually fails - if
     // totalBlocksReceived/lastWrittenBlockPeak are 0 too, pushAudioBlock() itself never wrote
-    // anything, which is a very different problem from a too-tight timing margin.
+    // anything, which is a very different problem from a too-tight timing margin. The rest
+    // (added in audio_capture_dsp v0.3.1) narrows down exactly which step inside pushAudioBlock
+    // - resample, or the FIFO write itself - came up empty.
     INFO("totalBlocksReceived=" << processor.audioCapture.totalBlocksReceived.load());
     INFO("lastWrittenBlockPeak=" << processor.audioCapture.lastWrittenBlockPeak.load());
+    INFO("lastSpeedRatio=" << processor.audioCapture.lastSpeedRatio.load());
+    INFO("lastPendingCountBeforeResample=" << processor.audioCapture.lastPendingCountBeforeResample.load());
+    INFO("lastNumOutputSamplesRequested=" << processor.audioCapture.lastNumOutputSamplesRequested.load());
+    INFO("lastInterpolatorUsedLeft=" << processor.audioCapture.lastInterpolatorUsedLeft.load());
+    INFO("lastInterpolatorUsedRight=" << processor.audioCapture.lastInterpolatorUsedRight.load());
+    INFO("lastFifoFreeSpaceBeforeWrite=" << processor.audioCapture.lastFifoFreeSpaceBeforeWrite.load());
+    INFO("lastFifoWriteSize1=" << processor.audioCapture.lastFifoWriteSize1.load());
+    INFO("lastFifoWriteSize2=" << processor.audioCapture.lastFifoWriteSize2.load());
 
     // 300ms sleep / 100ms floor: a wide margin against scheduler jitter on shared/virtualized CI
     // runners - this is a regression guard against getCurrentLatencyMs() being stuck at 0 (a
