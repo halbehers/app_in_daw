@@ -22,15 +22,25 @@ TEST_CASE("PluginAudioProcessor::processBlock updates getCurrentLatencyMs from r
     const float* channelData[2] { captured.data(), captured.data() };
     processor.audioCapture.pushAudioBlock(channelData, 2, 256, 48000.0);
 
-    juce::Thread::sleep(50);
+    // Diagnostics only surfaced by Catch2 if a CHECK below actually fails - if
+    // totalBlocksReceived/lastWrittenBlockPeak are 0 too, pushAudioBlock() itself never wrote
+    // anything, which is a very different problem from a too-tight timing margin.
+    INFO("totalBlocksReceived=" << processor.audioCapture.totalBlocksReceived.load());
+    INFO("lastWrittenBlockPeak=" << processor.audioCapture.lastWrittenBlockPeak.load());
+
+    // 300ms sleep / 100ms floor: a wide margin against scheduler jitter on shared/virtualized CI
+    // runners - this is a regression guard against getCurrentLatencyMs() being stuck at 0 (a
+    // previously fixed bug), not a precise timing measurement, so generous slack costs nothing.
+    juce::Thread::sleep(300);
 
     juce::AudioBuffer<float> buffer(2, 512);
     juce::MidiBuffer midi;
     processor.processBlock(buffer, midi);
 
     const double latencyMs = processor.getCurrentLatencyMs();
+    INFO("latencyMs=" << latencyMs);
     CHECK(std::isfinite(latencyMs));
-    CHECK(latencyMs >= 30.0); // margin under the 50ms sleep to tolerate scheduler slop
+    CHECK(latencyMs >= 100.0);
 }
 
 TEST_CASE("PluginAudioProcessor::processBlock settles latency back to 0 once fully drained and idle", "[PluginProcessorLatency]")

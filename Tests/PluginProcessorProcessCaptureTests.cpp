@@ -34,5 +34,14 @@ TEST_CASE("PluginAudioProcessor::processBlock drains synthetic audio pushed dire
     juce::MidiBuffer midi;
     processor.processBlock(buffer, midi);
 
+    // Diagnostics only surfaced by Catch2 if the CHECK below fails - narrows down which stage of
+    // the pipeline (push -> fifo -> drain) came up empty.
+    INFO("totalBlocksReceived=" << processor.audioCapture.totalBlocksReceived.load());
+    INFO("lastWrittenBlockPeak=" << processor.audioCapture.lastWrittenBlockPeak.load());
+    INFO("totalProcessCalls=" << processor.audioCapture.totalProcessCalls.load());
+    INFO("lastRequestedBufferSize=" << processor.audioCapture.lastRequestedBufferSize.load());
+    INFO("lastNumRead=" << processor.audioCapture.lastNumRead.load());
+    INFO("totalSamplesRead=" << processor.audioCapture.totalSamplesRead.load());
+    INFO("lastReadBlockPeak=" << processor.audioCapture.lastReadBlockPeak.load());
     CHECK(buffer.getMagnitude(0, 0, buffer.getNumSamples()) > 0.0f);
 }
