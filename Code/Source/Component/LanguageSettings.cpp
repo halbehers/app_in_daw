@@ -54,6 +54,8 @@ LanguageSettings::LanguageSettings(const std::string& identifier):
     _layout.setDisplayGrid(false);
     _layout.init({ 1, 1, 1 }, { 1, 4 });
 
+    _layout.setFixedRowHeight(0, 32.f);
+
     _layout.addComponent(_title, 0, 0, 2, 1);
     _layout.addComponent(LANGUAGE_PICKER_ID, _languagePicker, 1, 0, 2, 1);
 
@@ -78,11 +80,6 @@ void LanguageSettings::resized()
     Component::resized();
 
     _layout.resized();
-
-    constexpr int pickerWidth = 220;
-    const auto pickerCellBounds = _layout.getBounds(LANGUAGE_PICKER_ID);
-    _languagePicker.setBounds(juce::Rectangle<float>((float) pickerWidth, (float) _languagePicker.getHeight())
-        .withPosition(getControlX(pickerCellBounds, (float) pickerWidth), pickerCellBounds.getCentreY() - (float) _languagePicker.getHeight() / 2.f).toNearestInt());
 }
 
 float LanguageSettings::getControlX(const juce::Rectangle<float>& cell, float controlWidth)

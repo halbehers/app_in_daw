@@ -28,12 +28,14 @@ SettingsWindow::SettingsWindow(const std::string& identifier, nlayout::WindowsMa
 
     _layout.setGap(24.f);
     _layout.setDisplayGrid(false);
-    _layout.init({ 1, 3, 3 }, { 1, 1 });
+    _layout.init({ 1, 3, 3 }, { 4, 5 });
+
+    _layout.setFixedRowHeight(0, 42.f);
 
     _layout.addComponent(_title, 0, 0, 2, 1);
     _layout.addComponent(_visualSettings, 1, 0, 1, 1);
-    _layout.addComponent(_outputSettings, 1, 1, 1, 1);
-    _layout.addComponent(_languageSettings, 2, 0, 2, 1);
+    _layout.addComponent(_outputSettings, 1, 1, 1, 2);
+    _layout.addComponent(_languageSettings, 2, 0, 1, 1);
 
     _titleIcon.toFront(false);
     _closeButton.toFront(false);
@@ -88,17 +90,17 @@ void SettingsWindow::resized()
     _layout.resized();
 
     constexpr int closeButtonSize = 24;
-    _closeButton.setBounds(cardBounds.getRight() - closeButtonSize - 16, cardBounds.getY() + 16, closeButtonSize, closeButtonSize);
+    _closeButton.setBounds(cardBounds.getRight() - closeButtonSize - 16, cardBounds.getY() + 24, closeButtonSize, closeButtonSize);
 
     constexpr int titleIconSize = 20;
     const auto titleCellBounds = _layout.getBounds(_title.getComponentID().toStdString());
     _titleIcon.setBounds(juce::Rectangle<float>((float) titleIconSize, (float) titleIconSize)
-        .withPosition(titleCellBounds.getX(), titleCellBounds.getCentreY() - (float) titleIconSize / 2.f).toNearestInt());
+        .withPosition(titleCellBounds.getX(), titleCellBounds.getCentreY() - (float) titleIconSize / 2.f + 2.f).toNearestInt());
 }
 
 juce::Rectangle<int> SettingsWindow::getCardBounds()
 {
-    constexpr int maxCardWidth = 550;
+    constexpr int maxCardWidth = 650;
     constexpr int maxCardHeight = 400;
 
     const auto margin = juce::jmax(32, juce::jmin(getWidth(), getHeight()) / 8);

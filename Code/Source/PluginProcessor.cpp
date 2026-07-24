@@ -6,11 +6,12 @@
 
 PluginAudioProcessor::PluginAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
+     // Output-only: this plugin's audio comes from OS-level process-audio capture, never from its
+     // own input bus (processBlock() overwrites the incoming buffer wholesale), so there's no
+     // input to declare - this also keeps JUCE's Standalone host from thinking there's a
+     // feedback-loop risk between input and output.
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
-                      #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                      #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
                        ), ndsp::ParameterManager(dynamic_cast<juce::AudioProcessor&>(*this), [this]() { return getParameterLayout(); })
@@ -217,12 +218,6 @@ bool PluginAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) co
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
      && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
-
-    // This checks if the input layout matches the output layout
-   #if ! JucePlugin_IsSynth
-    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
-        return false;
-   #endif
 
     return true;
   #endif

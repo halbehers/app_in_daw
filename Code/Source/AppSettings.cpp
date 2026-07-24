@@ -3,6 +3,7 @@
 namespace
 {
     const char* SHOW_LATENCY_MONITOR_KEY = "showLatencyMonitor";
+    const char* SHOW_STANDALONE_TITLE_KEY = "showStandaloneTitle";
     const char* THEME_MODE_KEY = "themeMode";
     const char* OUTPUT_TRIM_DB_KEY = "outputTrimDb";
     const char* LANGUAGE_KEY = "language";
@@ -73,6 +74,17 @@ bool AppSettings::getShowLatencyMonitor() const
 void AppSettings::setShowLatencyMonitor(bool show)
 {
     _properties.setValue(SHOW_LATENCY_MONITOR_KEY, show);
+    _properties.save();
+}
+
+bool AppSettings::getShowStandaloneTitle() const
+{
+    return _properties.getBoolValue(SHOW_STANDALONE_TITLE_KEY, true);
+}
+
+void AppSettings::setShowStandaloneTitle(bool show)
+{
+    _properties.setValue(SHOW_STANDALONE_TITLE_KEY, show);
     _properties.save();
 }
 

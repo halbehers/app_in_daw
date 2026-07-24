@@ -13,18 +13,20 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
     if (APPLE)
         set(PACKAGING_AU_PATH "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/Release/AU/${PRODUCT_NAME}.component")
         set(PACKAGING_VST3_PATH "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/Release/VST3/${PRODUCT_NAME}.vst3")
+        set(PACKAGING_STANDALONE_PATH "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/Release/Standalone/${PRODUCT_NAME}.app")
 
         add_custom_target(package_installer ALL
-                DEPENDS ${PROJECT_NAME}_AU ${PROJECT_NAME}_VST3
+                DEPENDS ${PROJECT_NAME}_AU ${PROJECT_NAME}_VST3 ${PROJECT_NAME}_Standalone
                 COMMAND ${CMAKE_COMMAND} -E env
                         "PRODUCT_NAME=${PRODUCT_NAME}"
                         "BUNDLE_ID=${BUNDLE_ID}"
                         "VERSION=${VERSION}"
                         "AU_PATH=${PACKAGING_AU_PATH}"
                         "VST3_PATH=${PACKAGING_VST3_PATH}"
+                        "STANDALONE_PATH=${PACKAGING_STANDALONE_PATH}"
                         "OUTPUT_DIR=${PACKAGING_OUTPUT_DIR}"
                         bash "${CMAKE_CURRENT_SOURCE_DIR}/Scripts/package_macos.sh"
-                COMMENT "Packaging ${PRODUCT_NAME} (AU + VST3) into a macOS installer"
+                COMMENT "Packaging ${PRODUCT_NAME} (AU + VST3 + Standalone) into a macOS installer"
                 VERBATIM
         )
     elseif (WIN32)
@@ -34,7 +36,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
             set(PACKAGING_ARTEFACTS_PATH "${CMAKE_BINARY_DIR}/${PROJECT_NAME}_artefacts/Release")
 
             add_custom_target(package_installer ALL
-                    DEPENDS ${PROJECT_NAME}_VST3
+                    DEPENDS ${PROJECT_NAME}_VST3 ${PROJECT_NAME}_Standalone
                     COMMAND ${CMAKE_COMMAND} -E make_directory "${PACKAGING_OUTPUT_DIR}"
                     COMMAND ${CMAKE_COMMAND} -E env
                             "PROJECT_NAME=${PROJECT_NAME}"
@@ -46,7 +48,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
                             "/DArtefactsPath=${PACKAGING_ARTEFACTS_PATH}"
                             "/O${PACKAGING_OUTPUT_DIR}"
                             "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/windows/installer.iss"
-                    COMMENT "Packaging ${PRODUCT_NAME} (VST3) into a Windows installer"
+                    COMMENT "Packaging ${PRODUCT_NAME} (VST3 + Standalone) into a Windows installer"
                     VERBATIM
             )
         else ()

@@ -12,15 +12,23 @@ set(FORMATS Standalone AU AUv3 VST3)
 
 set(CMAKE_CXX_STANDARD 20)
 set(JUCE_VERSION 8.0.14)
-set(NIERIKA_DSP_VERSION 0.5.0)
-set(AUDIO_CAPTURE_DSP_VERSION 0.2.2)
+set(NIERIKA_DSP_VERSION 0.6.2)
+set(AUDIO_CAPTURE_DSP_VERSION 0.3.2)
 set(INCLUDE_DIR "Code/Include")
 set(SOURCE_DIR "Code/Source")
 set(CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
 set(LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Libs")
 
+# $ENV{USER}/$ENV{HOME} are unset on Windows (uses $ENV{USERNAME}/$ENV{USERPROFILE} instead), so
+# resolve the dev home per-platform rather than hardcoding a path that only works on one OS.
+if (WIN32)
+    set(LOCAL_DSP_DEV_DIR "$ENV{USERPROFILE}/Development")
+else ()
+    set(LOCAL_DSP_DEV_DIR "$ENV{HOME}/Development")
+endif ()
+
 set(USE_LOCAL_NIERIKA_DSP ON)
-set(LOCAL_NIERIKA_DSP_PATH "/Users/$ENV{USER}/Development/nierika_dsp") # Change for your local path to the nierika_dsp module if you want to use a local version instead of the remote package.
+set(LOCAL_NIERIKA_DSP_PATH "${LOCAL_DSP_DEV_DIR}/nierika_dsp") # Change for your local path to the nierika_dsp module if you want to use a local version instead of the remote package.
 
 if (USE_LOCAL_NIERIKA_DSP AND NOT EXISTS "${LOCAL_NIERIKA_DSP_PATH}")
     message(STATUS "Local module 'nierika_dsp' with path '${LOCAL_NIERIKA_DSP_PATH}' not found. Falling back to remote package.")
@@ -28,7 +36,7 @@ if (USE_LOCAL_NIERIKA_DSP AND NOT EXISTS "${LOCAL_NIERIKA_DSP_PATH}")
 endif()
 
 set(USE_LOCAL_AUDIO_CAPTURE_DSP ON)
-set(LOCAL_AUDIO_CAPTURE_DSP_PATH "/Users/$ENV{USER}/Development/audio_capture_dsp") # Change for your local path to the audio_capture_dsp module if you want to use a local version instead of the remote package.
+set(LOCAL_AUDIO_CAPTURE_DSP_PATH "${LOCAL_DSP_DEV_DIR}/audio_capture_dsp") # Change for your local path to the audio_capture_dsp module if you want to use a local version instead of the remote package.
 
 if (USE_LOCAL_AUDIO_CAPTURE_DSP AND NOT EXISTS "${LOCAL_AUDIO_CAPTURE_DSP_PATH}")
     message(STATUS "Local module 'audio_capture_dsp' with path '${LOCAL_AUDIO_CAPTURE_DSP_PATH}' not found. Falling back to remote package.")
@@ -93,7 +101,7 @@ include(${CMAKE_DIR}/utils.cmake)
 
 juce_add_binary_data("${PROJECT_NAME}_Assets" SOURCES
         ${CMAKE_CURRENT_LIST_DIR}/Packaging/icon.iconset/icon_512x512@2x.png
-        ${CMAKE_CURRENT_LIST_DIR}/Packaging/icon.iconset/icon_128x128.png
+        ${CMAKE_CURRENT_LIST_DIR}/Packaging/icon.iconset/icon_128x128@2x.png
         ${CMAKE_CURRENT_LIST_DIR}/Assets/process_categories.json
         ${CMAKE_CURRENT_LIST_DIR}/Assets/Languages/en.lang
         ${CMAKE_CURRENT_LIST_DIR}/Assets/Languages/fr.lang
@@ -106,7 +114,7 @@ juce_add_binary_data("${PROJECT_NAME}_Assets" SOURCES
 juce_add_plugin(
         ${PROJECT_NAME}
         ICON_BIG "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/icon.iconset/icon_512x512@2x.png"
-        ICON_SMALL "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/icon.iconset/icon_128x128.png"
+        ICON_SMALL "${CMAKE_CURRENT_SOURCE_DIR}/Packaging/icon.iconset/icon_128x128@2x.png"
         COMPANY_NAME "${COMPANY_NAME}"
         BUNDLE_ID "${BUNDLE_ID}"
         PLUGIN_MANUFACTURER_CODE "${MANUFACTURER_CODE}"
@@ -125,7 +133,12 @@ juce_add_plugin(
         PLIST_TO_MERGE "<plist><dict><key>NSAudioCaptureUsageDescription</key><string>Used to capture audio from another application running on this system and route it into the plugin's own output.</string></dict></plist>"
 )
 
-file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS "${SOURCE_DIR}/*.cpp" "${SOURCE_DIR}/*.mm")
+file(GLOB_RECURSE SourceFiles CONFIGURE_DEPENDS "${SOURCE_DIR}/*.cpp")
+if (APPLE)
+    # .mm (Objective-C++) only makes sense/compiles on Apple platforms.
+    file(GLOB_RECURSE ObjCSourceFiles CONFIGURE_DEPENDS "${SOURCE_DIR}/*.mm")
+    list(APPEND SourceFiles ${ObjCSourceFiles})
+endif ()
 file(GLOB_RECURSE HeaderFiles CONFIGURE_DEPENDS "${INCLUDE_DIR}/*.h")
 target_sources(${PROJECT_NAME} PRIVATE ${SourceFiles} )
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIR})
@@ -152,7 +165,14 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         "${PROJECT_NAME}_Assets"
 )
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC JUCE_VST3_CAN_REPLACE_VST2=0)
+if (WIN32)
+    # For StandaloneWindowStyling.cpp's DwmSetWindowAttribute() call (title-bar caption colour).
+    target_link_libraries(${PROJECT_NAME} PUBLIC dwmapi)
+endif ()
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+        JUCE_VST3_CAN_REPLACE_VST2=0
+        JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1)
 
 # Treat warnings as errors
 set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
