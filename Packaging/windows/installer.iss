@@ -24,11 +24,15 @@ DefaultDirName="{autopf}\{#ProductName}"
 DisableDirPage=yes
 LicenseFile="resources\EULA"
 UninstallFilesDir="{commonappdata}\{#ProductName}\uninstall"
+WizardStyle=modern
+WizardSizePercent=120
 
-; VST3 is always installed (matches prior behaviour); Standalone is a user-toggleable extra,
-; selected by default - shown as a checkbox list since no [Types] section is defined.
+; Both formats are independently toggleable (e.g. a Standalone-only install with no VST3) and
+; checked by default. Neither uses "fixed" - that flag renders as an unchecked, disabled checkbox
+; rather than a checked one, which reads as broken/unselectable rather than "always installed".
+; Shown as a plain checkbox list since no [Types] section is defined.
 [Components]
-Name: "vst3"; Description: "VST3 Plugin"; Flags: fixed
+Name: "vst3"; Description: "VST3 Plugin"
 Name: "standalone"; Description: "Standalone Application"
 
 ; MSVC adds a .ilk when building the plugin - excluded so it doesn't ship in the installer.
