@@ -42,7 +42,16 @@ pkgbuild --identifier "$BUNDLE_ID.au.pkg" --version "$VERSION" --component "$AU_
     --install-location "/Library/Audio/Plug-Ins/Components" "$WORK_DIR/$PRODUCT_NAME.au.pkg"
 pkgbuild --identifier "$BUNDLE_ID.vst3.pkg" --version "$VERSION" --component "$VST3_PATH" \
     --install-location "/Library/Audio/Plug-Ins/VST3" "$WORK_DIR/$PRODUCT_NAME.vst3.pkg"
-pkgbuild --identifier "$BUNDLE_ID.standalone.pkg" --version "$VERSION" --component "$STANDALONE_PATH" \
+# pkgbuild's --component mode marks .app bundles "relocatable" by default: if macOS's Launch
+# Services already knows about a bundle with the same identifier anywhere on disk (e.g. a local
+# dev build in build/AppInDAW_artefacts), installd silently redirects the install there instead
+# of --install-location, so the app never actually lands in /Applications. There's no direct
+# pkgbuild flag to disable this - it has to go through a component property list instead.
+STANDALONE_ROOT="$(dirname "$STANDALONE_PATH")"
+pkgbuild --analyze --root "$STANDALONE_ROOT" "$WORK_DIR/standalone-component.plist"
+plutil -replace 0.BundleIsRelocatable -bool NO "$WORK_DIR/standalone-component.plist"
+pkgbuild --identifier "$BUNDLE_ID.standalone.pkg" --version "$VERSION" \
+    --root "$STANDALONE_ROOT" --component-plist "$WORK_DIR/standalone-component.plist" \
     --install-location "/Applications" "$WORK_DIR/$PRODUCT_NAME.standalone.pkg"
 
 PRODUCT_NAME="$PRODUCT_NAME" BUNDLE_ID="$BUNDLE_ID" VERSION="$VERSION" \
