@@ -123,7 +123,7 @@ public:
         const auto captionColour = nui::Theme::newColor (nui::Theme::ThemeColor::BACKGROUND).asJuce();
 
         mainWindow->setUsingNativeTitleBar (true);
-        standalone::styleNativeTitleBar (*mainWindow, captionColour, (float) titleBarHeight);
+        standalone::styleNativeTitleBar (*mainWindow, captionColour, static_cast<float>(titleBarHeight));
         AppSettings::getInstance().setShowStandaloneTitle(false);
         // No-op on macOS - the native title there is already permanently hidden in favour of
         // _titleLabel below, which is what actually reads this setting on that platform.

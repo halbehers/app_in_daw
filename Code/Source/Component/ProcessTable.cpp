@@ -263,7 +263,7 @@ std::optional<audiocapture::ProcessInfo> ProcessTable::getProcess(int processID)
 
 int ProcessTable::getNumRows()
 {
-    return (int) _filteredProcesses.size();
+    return static_cast<int>(_filteredProcesses.size());
 }
 
 void ProcessTable::paintRowBackground(juce::Graphics& g, int rowNumber, int width, int height, bool rowIsSelected)
@@ -273,7 +273,7 @@ void ProcessTable::paintRowBackground(juce::Graphics& g, int rowNumber, int widt
         g.setColour(nui::Theme::newColor(nui::Theme::ThemeColor::ACCENT).asJuce().withAlpha(.1f));
         g.fillRect(0, 0, width, height);
         return;
-    } else if (_filteredProcesses[(size_t) rowNumber].processID == _highlightedProcessID)
+    } else if (_filteredProcesses[static_cast<size_t>(rowNumber)].processID == _highlightedProcessID)
     {
         g.setColour(nui::Theme::newColor(nui::Theme::ThemeColor::ACCENT).asJuce().withAlpha(.2f));
         g.fillRect(0, 0, width, height);
@@ -286,12 +286,12 @@ void ProcessTable::paintRowBackground(juce::Graphics& g, int rowNumber, int widt
     g.fillRect(0, 0, width, height);
 }
 
-void ProcessTable::paintCell(juce::Graphics& g, int rowNumber, int columnId, int width, int height, bool rowIsSelected)
+void ProcessTable::paintCell(juce::Graphics& g, int rowNumber, int columnId, int width, int height, bool /*rowIsSelected*/)
 {
-    if (rowNumber < 0 || rowNumber >= (int) _filteredProcesses.size())
+    if (rowNumber < 0 || rowNumber >= static_cast<int>(_filteredProcesses.size()))
         return;
 
-    const auto& process = _filteredProcesses[(size_t) rowNumber];
+    const auto& process = _filteredProcesses[static_cast<size_t>(rowNumber)];
 
     constexpr int textPadding = 8;
     constexpr float dotSize = 6.f;
@@ -308,7 +308,7 @@ void ProcessTable::paintCell(juce::Graphics& g, int rowNumber, int columnId, int
             if (process.processID != _highlightedProcessID && process.processID == _selectedProcessID)
             {
                 g.setColour(nui::Theme::newColor(nui::Theme::ThemeColor::ACCENT).asJuce().withAlpha(.8f));
-                g.fillEllipse((float) height / 2.f - dotSize / 2.f, (float) height / 2.f - dotSize / 2.f, dotSize, dotSize);
+                g.fillEllipse(static_cast<float>(height) / 2.f - dotSize / 2.f, static_cast<float>(height) / 2.f - dotSize / 2.f, dotSize, dotSize);
             }
             break;
         }
@@ -357,8 +357,8 @@ juce::Component* ProcessTable::refreshComponentForCell(int rowNumber, int column
         });
     }
 
-    if (rowNumber >= 0 && rowNumber < (int) _filteredProcesses.size())
-        cell->setProcess(_filteredProcesses[(size_t) rowNumber]);
+    if (rowNumber >= 0 && rowNumber < static_cast<int>(_filteredProcesses.size()))
+        cell->setProcess(_filteredProcesses[static_cast<size_t>(rowNumber)]);
 
     return cell;
 }
@@ -387,10 +387,10 @@ void ProcessTable::sortOrderChanged(int newSortColumnId, bool isForwards)
 
 juce::String ProcessTable::getCellTooltip(int rowNumber, int /*columnId*/)
 {
-    if (rowNumber < 0 || rowNumber >= (int) _filteredProcesses.size())
+    if (rowNumber < 0 || rowNumber >= static_cast<int>(_filteredProcesses.size()))
         return {};
 
-    return juce::String(_filteredProcesses[(size_t) rowNumber].executablePath);
+    return juce::String(_filteredProcesses[static_cast<size_t>(rowNumber)].executablePath);
 }
 
 void ProcessTable::listWasScrolled()
@@ -447,8 +447,6 @@ void ProcessTable::applyThemeColours()
     const auto background = nui::Theme::newColor(nui::Theme::ThemeColor::BACKGROUND).asJuce();
     const auto text = nui::Theme::newColor(nui::Theme::ThemeColor::TEXT).asJuce();
     const auto border = nui::Theme::newColor(nui::Theme::ThemeColor::BORDER).asJuce();
-    const auto secondaryBackground = nui::Theme::newColor(nui::Theme::ThemeColor::SECONDARY_BACKGROUND).asJuce();
-    const auto primary = nui::Theme::newColor(nui::Theme::ThemeColor::PRIMARY).asJuce();
     const auto accent = nui::Theme::newColor(nui::Theme::ThemeColor::ACCENT).asJuce();
 
     _table.setColour(juce::ListBox::backgroundColourId, background);
@@ -463,10 +461,10 @@ void ProcessTable::applyThemeColours()
 
 void ProcessTable::notifyProcessChosen(int row)
 {
-    if (row < 0 || row >= (int) _filteredProcesses.size())
+    if (row < 0 || row >= static_cast<int>(_filteredProcesses.size()))
     return;
-    
-    const auto process = _filteredProcesses[(size_t) row];
+
+    const auto process = _filteredProcesses[static_cast<size_t>(row)];
     _selectedProcessID = process.processID;
 
     for (auto* listener : _processChosenListeners)
@@ -475,10 +473,10 @@ void ProcessTable::notifyProcessChosen(int row)
 
 void ProcessTable::notifyProcessCapture(int row)
 {
-    if (row < 0 || row >= (int) _filteredProcesses.size())
+    if (row < 0 || row >= static_cast<int>(_filteredProcesses.size()))
         return;
 
-    const auto process = _filteredProcesses[(size_t) row];
+    const auto process = _filteredProcesses[static_cast<size_t>(row)];
     for (auto* listener : _processCaptureListeners)
         listener->onProcessCapture(process);
 }
@@ -494,7 +492,7 @@ void ProcessTable::updateCaptureIconPosition()
         return;
     }
 
-    const auto rowNumber = (int) std::distance(_filteredProcesses.begin(), it);
+    const auto rowNumber = static_cast<int>(std::distance(_filteredProcesses.begin(), it));
     const auto rowBounds = _table.getRowPosition(rowNumber, true);
 
     if (!_table.getLocalBounds().intersects(rowBounds))

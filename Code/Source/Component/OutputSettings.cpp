@@ -22,7 +22,7 @@ OutputSettings::OutputSettings(const std::string& identifier, PluginAudioProcess
 
     const auto persistedDb = AppSettings::getInstance().getOutputTrimDb();
     const auto* match = std::find(std::begin(TRIM_VALUES_DB), std::end(TRIM_VALUES_DB), persistedDb);
-    const auto initialIndex = match != std::end(TRIM_VALUES_DB) ? (int) (match - std::begin(TRIM_VALUES_DB)) : 0;
+    const auto initialIndex = match != std::end(TRIM_VALUES_DB) ? static_cast<int>(match - std::begin(TRIM_VALUES_DB)) : 0;
     _trimSwitch.setSelectedIndex(initialIndex, juce::dontSendNotification);
     _trimSwitch.addOnValueChangedListener(this);
     _trimSwitch.setSelectedInvertedTextColor(true);

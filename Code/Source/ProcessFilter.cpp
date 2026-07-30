@@ -32,9 +32,9 @@ namespace
 int ProcessFilter::getCurrentProcessID()
 {
 #if JUCE_WINDOWS
-    return (int) GetCurrentProcessId();
+    return static_cast<int>(GetCurrentProcessId());
 #else
-    return (int) getpid();
+    return static_cast<int>(getpid());
 #endif
 }
 

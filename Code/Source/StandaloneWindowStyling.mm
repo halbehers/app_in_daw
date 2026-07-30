@@ -18,7 +18,7 @@ namespace
         if (peer == nullptr)
             return nil;
 
-        auto* view = (NSView*) peer->getNativeHandle();
+        auto* view = static_cast<NSView*>(peer->getNativeHandle());
         if (view == nil)
             return nil;
 
@@ -128,7 +128,7 @@ namespace
     frame.origin.x = x;
     // More padding from the top edge - empirically, *increasing* y moved the buttons closer to
     // the top instead of further away, so this subtracts rather than adds.
-    frame.origin.y = baseline.doubleValue - 8.f;
+    frame.origin.y = baseline.doubleValue - 8.0;
     button.frame = frame;
 
     // Hovering near any one traffic light highlights all three together - that grouped hover
@@ -148,12 +148,12 @@ namespace
     if (_window == nil)
         return;
 
-    constexpr CGFloat xInset = 22.f;
-    constexpr CGFloat spacing = 20.f;
+    constexpr CGFloat xInset = 22.0;
+    constexpr CGFloat spacing = 20.0;
 
     [self positionButton: [_window standardWindowButton: NSWindowCloseButton] x: xInset];
     [self positionButton: [_window standardWindowButton: NSWindowMiniaturizeButton] x: xInset + spacing];
-    [self positionButton: [_window standardWindowButton: NSWindowZoomButton] x: xInset + spacing * 2.f];
+    [self positionButton: [_window standardWindowButton: NSWindowZoomButton] x: xInset + spacing * 2.0];
 }
 
 @end
@@ -177,10 +177,10 @@ void styleNativeTitleBar(juce::DocumentWindow& window, juce::Colour backgroundCo
     // light system colour) shows through anywhere JUCE's content view doesn't itself paint - a
     // sub-pixel gap right at the top edge was showing up as a thin white line. Matching it to the
     // app's own theme background means even that sliver is the right colour.
-    nsWindow.backgroundColor = [NSColor colorWithSRGBRed: backgroundColour.getFloatRed()
-                                                     green: backgroundColour.getFloatGreen()
-                                                      blue: backgroundColour.getFloatBlue()
-                                                     alpha: 1.f];
+    nsWindow.backgroundColor = [NSColor colorWithSRGBRed: static_cast<CGFloat>(backgroundColour.getFloatRed())
+                                                     green: static_cast<CGFloat>(backgroundColour.getFloatGreen())
+                                                      blue: static_cast<CGFloat>(backgroundColour.getFloatBlue())
+                                                     alpha: 1.0];
 
     // backgroundColor alone didn't get rid of that line - AppKit also draws its own subtle
     // highlight along a titled window's top border, coloured for whichever appearance (light/dark)

@@ -157,15 +157,15 @@ void AppLayout::resized()
     constexpr int categoryFilterWidth = 200;
     const auto categoryFilterHeight = static_cast<int>(nui::Theme::getLargeHeight());
     const auto categoryCellBounds = getLayout().getBounds(_categoryFilter.getComponentID().toStdString());
-    _categoryFilter.setBounds(juce::Rectangle<float>((float) categoryFilterWidth, (float) categoryFilterHeight)
+    _categoryFilter.setBounds(juce::Rectangle<float>(static_cast<float>(categoryFilterWidth), static_cast<float>(categoryFilterHeight))
         .withCentre(categoryCellBounds.getCentre()).toNearestInt());
 
     constexpr int hideBackgroundSwitchWidth = 200;
     const auto hideBackgroundSwitchHeight = static_cast<int>(nui::Theme::getLargeHeight());
     const auto hideBackgroundCellBounds = getLayout().getBounds(_hideBackgroundSwitch.getComponentID().toStdString());
-    _hideBackgroundSwitch.setBounds(juce::Rectangle<float>((float) hideBackgroundSwitchWidth, (float) hideBackgroundSwitchHeight)
-        .withPosition(hideBackgroundCellBounds.getRight() - (float) hideBackgroundSwitchWidth,
-                       hideBackgroundCellBounds.getCentreY() - (float) hideBackgroundSwitchHeight / 2.f).toNearestInt());
+    _hideBackgroundSwitch.setBounds(juce::Rectangle<float>(static_cast<float>(hideBackgroundSwitchWidth), static_cast<float>(hideBackgroundSwitchHeight))
+        .withPosition(hideBackgroundCellBounds.getRight() - static_cast<float>(hideBackgroundSwitchWidth),
+                       hideBackgroundCellBounds.getCentreY() - static_cast<float>(hideBackgroundSwitchHeight) / 2.f).toNearestInt());
 
     _windowsManager.setBounds(getLocalBounds());
 }

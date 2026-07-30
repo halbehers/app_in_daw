@@ -83,10 +83,10 @@ void SettingsWindow::resized()
     constexpr float inset = 24.f;
 
     _layout.setMargin(
-        (float) cardBounds.getX() + inset,
-        (float) cardBounds.getY() + inset,
-        (float) (getWidth() - cardBounds.getRight()) + inset,
-        (float) (getHeight() - cardBounds.getBottom()) + inset);
+        static_cast<float>(cardBounds.getX()) + inset,
+        static_cast<float>(cardBounds.getY()) + inset,
+        static_cast<float>(getWidth() - cardBounds.getRight()) + inset,
+        static_cast<float>(getHeight() - cardBounds.getBottom()) + inset);
     _layout.resized();
 
     constexpr int closeButtonSize = 24;
@@ -94,8 +94,8 @@ void SettingsWindow::resized()
 
     constexpr int titleIconSize = 20;
     const auto titleCellBounds = _layout.getBounds(_title.getComponentID().toStdString());
-    _titleIcon.setBounds(juce::Rectangle<float>((float) titleIconSize, (float) titleIconSize)
-        .withPosition(titleCellBounds.getX(), titleCellBounds.getCentreY() - (float) titleIconSize / 2.f + 2.f).toNearestInt());
+    _titleIcon.setBounds(juce::Rectangle<float>(static_cast<float>(titleIconSize), static_cast<float>(titleIconSize))
+        .withPosition(titleCellBounds.getX(), titleCellBounds.getCentreY() - static_cast<float>(titleIconSize) / 2.f + 2.f).toNearestInt());
 }
 
 juce::Rectangle<int> SettingsWindow::getCardBounds()

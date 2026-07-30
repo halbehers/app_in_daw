@@ -12,8 +12,8 @@ set(FORMATS Standalone AU AUv3 VST3)
 
 set(CMAKE_CXX_STANDARD 20)
 set(JUCE_VERSION 8.0.14)
-set(NIERIKA_DSP_VERSION 0.6.3)
-set(AUDIO_CAPTURE_DSP_VERSION 0.3.2)
+set(NIERIKA_DSP_VERSION 0.6.5)
+set(AUDIO_CAPTURE_DSP_VERSION 0.3.3)
 set(INCLUDE_DIR "Code/Include")
 set(SOURCE_DIR "Code/Source")
 set(CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/CMake")
@@ -143,7 +143,9 @@ file(GLOB_RECURSE HeaderFiles CONFIGURE_DEPENDS "${INCLUDE_DIR}/*.h")
 target_sources(${PROJECT_NAME} PRIVATE ${SourceFiles} )
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIR})
 
-target_link_libraries(${PROJECT_NAME} PUBLIC
+# SYSTEM: these are third-party/vendored headers - our own -Werror (set below via
+# set_source_files_properties) must not fire on warnings that live inside them.
+target_link_libraries_system(${PROJECT_NAME} PUBLIC
         juce::juce_audio_basics
         juce::juce_audio_devices
         juce::juce_audio_formats
@@ -157,11 +159,14 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
         juce::juce_graphics
         juce::juce_gui_basics
         juce::juce_gui_extra
+        nierika::nierika_dsp
+        audiocapture::audio_capture_dsp
+)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags
-        nierika::nierika_dsp
-        audiocapture::audio_capture_dsp
         "${PROJECT_NAME}_Assets"
 )
 
@@ -175,7 +180,7 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
         JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1)
 
 # Treat warnings as errors
-set_source_files_properties(${SOURCE_FILES} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
+set_source_files_properties(${SourceFiles} PROPERTIES COMPILE_OPTIONS "${PROJECT_WARNINGS_CXX}")
 
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 

@@ -125,12 +125,12 @@ void AppSettings::setLanguage(const std::string& languageCode)
 
 ProcessCategory AppSettings::getLastCategoryFilter() const
 {
-    return (ProcessCategory) _properties.getIntValue(LAST_CATEGORY_FILTER_KEY, (int) ProcessCategory::All);
+    return static_cast<ProcessCategory>(_properties.getIntValue(LAST_CATEGORY_FILTER_KEY, static_cast<int>(ProcessCategory::All)));
 }
 
 void AppSettings::setLastCategoryFilter(ProcessCategory category)
 {
-    _properties.setValue(LAST_CATEGORY_FILTER_KEY, (int) category);
+    _properties.setValue(LAST_CATEGORY_FILTER_KEY, static_cast<int>(category));
     _properties.save();
 }
 

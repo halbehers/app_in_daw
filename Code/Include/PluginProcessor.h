@@ -68,7 +68,7 @@ public:
 
     double getCurrentLatencyMs() const { return audioCapture.getCurrentLatencyMs(); }
 
-    void setOutputTrimDb(int db) { _outputTrimGain.store(juce::Decibels::decibelsToGain((float) db)); }
+    void setOutputTrimDb(int db) { _outputTrimGain.store(juce::Decibels::decibelsToGain(static_cast<float>(db))); }
 
     // Starts capturing the given process's audio, replacing whatever was being captured before.
     void selectProcess(int processID, const std::string& name, const std::string& executablePath);

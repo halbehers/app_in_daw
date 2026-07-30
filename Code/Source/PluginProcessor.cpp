@@ -268,7 +268,7 @@ void PluginAudioProcessor::setStateInformation (const void* data, int sizeInByte
 
     _lastProcessName = pluginState.getProperty(Parameters::PLUGIN_STATE_LAST_PROCESS_NAME_ID, "").toString().toStdString();
     _lastProcessExecutablePath = pluginState.getProperty(Parameters::PLUGIN_STATE_LAST_PROCESS_PATH_ID, "").toString().toStdString();
-    _lastProcessID = (int) pluginState.getProperty(Parameters::PLUGIN_STATE_LAST_PROCESS_PID_ID, 0);
+    _lastProcessID = static_cast<int>(pluginState.getProperty(Parameters::PLUGIN_STATE_LAST_PROCESS_PID_ID, 0));
 
     tryReacquireLastProcess();
 }

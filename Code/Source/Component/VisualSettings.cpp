@@ -66,8 +66,8 @@ void VisualSettings::resized()
     constexpr int toggleHeight = 22;
 
     const auto latencyToggleCell = _layout.getBounds(_latencyToggle.getID());
-    _latencyToggle.setBounds(juce::Rectangle<float>((float) toggleWidth, (float) toggleHeight)
-        .withPosition(getControlX(latencyToggleCell, (float) toggleWidth), latencyToggleCell.getCentreY() - (float) toggleHeight / 2.f).toNearestInt());
+    _latencyToggle.setBounds(juce::Rectangle<float>(static_cast<float>(toggleWidth), static_cast<float>(toggleHeight))
+        .withPosition(getControlX(latencyToggleCell, static_cast<float>(toggleWidth)), latencyToggleCell.getCentreY() - static_cast<float>(toggleHeight) / 2.f).toNearestInt());
 }
 
 float VisualSettings::getControlX(const juce::Rectangle<float>& cell, float controlWidth)
